@@ -1,0 +1,20 @@
+{
+  "name": "altimate-codex-plugin",
+  "interface": {
+    "displayName": "Altimate Data Engineering Plugins"
+  },
+  "plugins": [
+    {
+      "name": "altimate",
+      "source": {
+        "source": "local",
+        "path": "./plugins/altimate"
+      },
+      "policy": {
+        "installation": "AVAILABLE",
+        "authentication": "ON_INSTALL"
+      },
+      "category": "Developer Tools"
+    }
+  ]
+}

@@ -1,0 +1,43 @@
+{
+  "name": "altimate",
+  "version": "0.1.0",
+  "description": "Altimate data engineering skills for Codex — dbt creating/refactoring/debugging/testing/documenting/migrating/incremental + Snowflake query optimization + altimate-code delegation guidance.",
+  "author": {
+    "name": "Altimate AI",
+    "email": "support@altimate.ai",
+    "url": "https://altimate.ai"
+  },
+  "homepage": "https://github.com/AltimateAI/altimate-codex-plugin",
+  "repository": "https://github.com/AltimateAI/altimate-codex-plugin",
+  "license": "MIT",
+  "keywords": [
+    "altimate",
+    "dbt",
+    "snowflake",
+    "data-engineering",
+    "warehouse",
+    "altimate-code",
+    "skills"
+  ],
+  "skills": "./skills/",
+  "interface": {
+    "displayName": "Altimate Data Engineering",
+    "shortDescription": "dbt + Snowflake workflows + altimate-code delegation",
+    "longDescription": "11 skills covering dbt model creation, refactoring, debugging, testing, documenting, SQL migration, and incremental materialization, plus Snowflake query cost / optimization workflows, plus a guide for delegating multi-step data work to the altimate-code CLI agent. Same SKILL.md content shipping in the Claude Code, opencode, and Hermes plugin surfaces — the agentskills.io standard.",
+    "developerName": "Altimate AI",
+    "category": "Developer Tools",
+    "capabilities": [
+      "Read",
+      "Write"
+    ],
+    "defaultPrompt": [
+      "Create a new dbt staging model for our orders source.",
+      "Find the 10 most expensive queries from last week in Snowflake.",
+      "Delegate a cross-warehouse parity check to altimate-code."
+    ],
+    "websiteURL": "https://altimate.ai",
+    "privacyPolicyURL": "https://altimate.ai/privacy",
+    "termsOfServiceURL": "https://altimate.ai/terms",
+    "brandColor": "#3B82F6"
+  }
+}
