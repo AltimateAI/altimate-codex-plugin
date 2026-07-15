@@ -51,15 +51,22 @@ To remove the marketplace registration:
 codex plugin marketplace remove altimate-codex-plugin
 ```
 
+### Trusting the SessionStart hook
+
+The plugin ships a `SessionStart` hook that injects a short routing hint into the model's context so it prefers the `altimate-code` skill for warehouse-touching work. Codex does not run plugin-bundled hooks automatically — the first time you start a session with the plugin installed, Codex will prompt you to review and trust the hook definition. Approve it once and the hook fires in every subsequent session; skip it and the plugin still installs but the routing hint won't be delivered.
+
 ## Layout
 
 ```
 altimate-codex-plugin/
 ├── .agents/plugins/
-│   └── marketplace.json              # marketplace registry pointing at ./plugins/altimate
+│   └── marketplace.json                        # marketplace registry pointing at ./plugins/altimate
 └── plugins/altimate/
     ├── .codex-plugin/
-    │   └── plugin.json               # plugin manifest
+    │   └── plugin.json                         # plugin manifest
+    ├── hooks/
+    │   ├── hooks.json                          # SessionStart hook definition
+    │   └── altimate-code-session-start.sh      # hook script (routing hint)
     └── skills/
         ├── altimate-code/SKILL.md
         ├── creating-dbt-models/SKILL.md
