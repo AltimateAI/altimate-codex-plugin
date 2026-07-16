@@ -1,0 +1,44 @@
+{
+  "name": "altimate-code",
+  "version": "1.0.0",
+  "description": "Delegates dbt and warehouse work to altimate-code, a specialized CLI agent with 100+ purpose-built data tools (SQL analysis, column-level lineage, dbt build/test/run, warehouse profiling, FinOps, connectivity to Snowflake, BigQuery, Redshift, Databricks, Postgres, MySQL, DuckDB).",
+  "author": {
+    "name": "Altimate AI",
+    "email": "support@altimate.ai",
+    "url": "https://altimate.ai"
+  },
+  "homepage": "https://altimate.ai",
+  "repository": "https://github.com/AltimateAI/altimate-codex-plugin",
+  "license": "MIT",
+  "keywords": [
+    "altimate",
+    "altimate-code",
+    "delegation",
+    "dbt",
+    "snowflake",
+    "data-engineering",
+    "warehouse",
+    "column-lineage"
+  ],
+  "skills": "./skills/",
+  "interface": {
+    "displayName": "Altimate Code",
+    "shortDescription": "Delegate dbt + warehouse work to the altimate-code CLI agent",
+    "longDescription": "Routes data-engineering tasks — column-level lineage, cross-database validation, warehouse profiling, FinOps reporting, PII detection, dbt builds against real warehouses — to altimate-code, which already ships the specialised sub-skills internally. Use this plugin when you want Codex to hand a task to altimate-code rather than reimplement the workflow with native tools.",
+    "developerName": "Altimate AI",
+    "category": "Developer Tools",
+    "capabilities": [
+      "Read",
+      "Write"
+    ],
+    "defaultPrompt": [
+      "Compare row counts between prod and staging in Snowflake.",
+      "Show column-level lineage for dim_customers.",
+      "Delegate a cross-warehouse parity check to altimate-code."
+    ],
+    "websiteURL": "https://altimate.ai",
+    "privacyPolicyURL": "https://altimate.ai/privacy",
+    "termsOfServiceURL": "https://altimate.ai/terms",
+    "brandColor": "#3B82F6"
+  }
+}

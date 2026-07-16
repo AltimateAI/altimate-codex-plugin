@@ -1,14 +1,14 @@
 {
   "name": "altimate-codex-plugin",
   "interface": {
-    "displayName": "Altimate Data Engineering Plugins"
+    "displayName": "Altimate Plugins"
   },
   "plugins": [
     {
-      "name": "altimate",
+      "name": "altimate-code",
       "source": {
         "source": "local",
-        "path": "./plugins/altimate"
+        "path": "./plugins/altimate-code"
       },
       "policy": {
         "installation": "AVAILABLE",

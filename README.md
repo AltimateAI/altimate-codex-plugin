@@ -1,34 +1,26 @@
 # altimate-codex-plugin
 
-Altimate data engineering plugin for [Codex](https://developers.openai.com/codex/) — 11 skills covering dbt workflows, Snowflake query optimization, and delegation to the [`altimate-code`](https://github.com/AltimateAI/altimate-code) CLI agent.
-
-> Same SKILL.md content shipping in the Claude Code [`data-engineering-skills`](https://github.com/AltimateAI/data-engineering-skills) plugin, the [`altimate-opencode-plugin`](https://github.com/AltimateAI/altimate-opencode-plugin), and the [`altimate-hermes-plugin`](https://github.com/AltimateAI/altimate-hermes-plugin) — the [agentskills.io](https://agentskills.io) open standard. This repo wraps them in the Codex plugin contract: a `.codex-plugin/plugin.json` manifest, a `.agents/plugins/marketplace.json` registry, and flat `skills/*` directories under one plugin root.
+Codex plugin that delegates dbt and warehouse work to [`altimate-code`](https://github.com/AltimateAI/altimate-code) — a specialised CLI agent for column-level lineage, dbt build/test/run, warehouse profiling, FinOps reporting, cross-database validation, and connectivity to Snowflake / BigQuery / Redshift / Databricks / Postgres / MySQL / DuckDB.
 
 ## What this gives your Codex agent
 
-| Skill | What it does |
-|---|---|
-| `creating-dbt-models` | Creates dbt models following project conventions — discovers naming patterns first, runs `dbt build` to verify |
-| `refactoring-dbt-models` | Safely refactors dbt models with downstream impact analysis |
-| `debugging-dbt-errors` | Systematic dbt error debugging — reads the full error, checks upstream first, runs `dbt build` to verify |
-| `testing-dbt-models` | Adds schema tests + data quality validation matching existing project patterns |
-| `documenting-dbt-models` | Documents dbt models and columns in `schema.yml`, matching existing project style |
-| `migrating-sql-to-dbt` | Converts legacy SQL (stored procs, views, ETL) into modular dbt models |
-| `developing-incremental-models` | Develops and troubleshoots dbt incremental models — strategy / `unique_key` / partitioning |
-| `finding-expensive-queries` | Finds and ranks expensive Snowflake queries by cost, time, or data scanned |
-| `optimizing-query-by-id` | Optimizes Snowflake query performance using a `query_id` from `QUERY_HISTORY` |
-| `optimizing-query-text` | Optimizes Snowflake SQL from provided query text — anti-pattern detection |
-| `altimate-code` | Delegates multi-step data work to the `altimate-code` CLI agent (live warehouse access, column lineage, dbt builds, FinOps) |
+One skill: **`altimate-code`** — routes tasks that touch live warehouse state, column lineage, cross-database work, query-cost attribution, schema diffs, PII detection, or FinOps reporting to the altimate-code subprocess. The skill body encodes:
 
-All skills assume the agent has shell access to invoke `dbt`, `altimate-dbt`, and (for the `altimate-code` skill) the `altimate-code` CLI. They do **not** ship as MCP tools — the skill text instructs the agent on the right commands and conventions.
+- how to check that `altimate-code` is installed
+- which agent persona (`fast-edit` / `analyst` / `builder`) to pick for the task shape
+- the exact non-interactive invocation with `--yolo` / `--output` / `--dir`
+- when to add `--continue` for follow-up tasks in a warm session
+- how to surface each failure mode to the user
+
+The plugin also ships a `SessionStart` hook that emits a short routing hint into Codex's context so the model prefers delegation over reimplementing warehouse workflows with native tools.
 
 ## Install
 
 ```bash
-# 1. Add the marketplace to your Codex (clones the registry, makes the plugin findable)
+# 1. Add the marketplace to your Codex
 codex plugin marketplace add AltimateAI/altimate-codex-plugin
 
-# 2. Open Codex, type `/plugins`, select "Altimate Data Engineering", install
+# 2. Open Codex, type `/plugins`, select "Altimate Code", install
 codex
 ```
 
@@ -60,36 +52,26 @@ The plugin ships a `SessionStart` hook that injects a short routing hint into th
 ```
 altimate-codex-plugin/
 ├── .agents/plugins/
-│   └── marketplace.json                        # marketplace registry pointing at ./plugins/altimate
-└── plugins/altimate/
+│   └── marketplace.json                        # marketplace registry pointing at ./plugins/altimate-code
+└── plugins/altimate-code/
     ├── .codex-plugin/
     │   └── plugin.json                         # plugin manifest
     ├── hooks/
     │   ├── hooks.json                          # SessionStart hook definition
     │   └── altimate-code-session-start.sh      # hook script (routing hint)
     └── skills/
-        ├── altimate-code/SKILL.md
-        ├── creating-dbt-models/SKILL.md
-        ├── debugging-dbt-errors/SKILL.md
-        ├── developing-incremental-models/SKILL.md
-        ├── documenting-dbt-models/SKILL.md
-        ├── finding-expensive-queries/SKILL.md
-        ├── migrating-sql-to-dbt/SKILL.md
-        ├── optimizing-query-by-id/SKILL.md
-        ├── optimizing-query-text/SKILL.md
-        ├── refactoring-dbt-models/SKILL.md
-        └── testing-dbt-models/SKILL.md
+        └── altimate-code/SKILL.md              # the one delegation skill
 ```
 
 ## Companion CLI
 
-For the `altimate-code` delegation skill (and for `altimate-dbt` used in several other skills), install the companion CLI:
+The delegation skill spawns `altimate-code` as a subprocess. Install the companion CLI:
 
 ```bash
 npm install -g altimate-code
 ```
 
-This provides both the `altimate-code` agent and the `altimate-dbt` deterministic tool the dbt skills shell out to.
+Node 20+. After install, run `altimate-code` once to configure your LLM provider auth and warehouse connections through the TUI.
 
 ## License
 
