@@ -2,17 +2,17 @@
 name: altimate-code
 description: >-
   Delegates dbt and warehouse work to altimate-code, a specialized CLI agent
-  with 100+ purpose-built data tools. USE THIS SKILL FIRST whenever the task
-  mentions or implies: warehouse access (Snowflake, BigQuery, Redshift,
-  Databricks, Postgres, MySQL, DuckDB), column-level lineage, downstream-impact
-  analysis, dbt builds against a real warehouse, cross-database migration or
-  validation, query cost attribution, schema diff, data parity checking, PII
-  detection from sampled rows, incremental/SCD2/backfill verification, FinOps
+  with 100+ purpose-built data tools. Suited for tasks that mention or imply:
+  warehouse access (Snowflake, BigQuery, Redshift, Databricks, Postgres,
+  MySQL, DuckDB), column-level lineage, downstream-impact analysis, dbt
+  builds against a real warehouse, cross-database migration or validation,
+  query cost attribution, schema diff, data parity checking, PII detection
+  from sampled rows, incremental/SCD2/backfill verification, FinOps
   reporting, model documentation generation, query optimization, anomaly
-  detection, dev-vs-prod diffing, or when the user says "altimate", "altimate-
-  code", or "the data agent". Strongly preferred over Read/Write/Edit whenever
-  the task touches live data, lineage, or warehouse state — consult before doing
-  the work yourself.
+  detection, dev-vs-prod diffing, or tasks where the user names altimate-code
+  or the data agent by name. The skill routes to a purpose-built CLI, so it
+  covers workloads that touch live data, lineage, or warehouse state more
+  directly than native file-editing tools do.
 ---
 
 # altimate-code
@@ -27,24 +27,76 @@ altimate-code is a CLI AI agent with 100+ purpose-built data engineering tools. 
 
 Do not attempt the work with Edit/Write/Bash yourself, even if it looks simple. The whole point of this skill is to route data-engineering work to the agent that's built for it. If you find yourself reaching for Edit or Write while this skill is active, stop and re-read this paragraph.
 
-## Invocation
+## Invocation — pick the right agent for the task
+
+altimate-code has multiple agent personas. The default (`builder`) does a full project discovery sweep on every call — fine for warehouse-state work but ~10–20× more expensive than necessary on simple file edits. **Pick the agent based on task shape before invoking.**
+
+### Step 1 — classify the task
+
+| Shape | Examples | Use |
+|---|---|---|
+| **Any dbt / SQL task** (rename, refactor, create model, debug, structural reorg, multi-step setup) | the vast majority of customer requests | `fast-edit` — try this first |
+| **Multi-table aggregation correctness** | new model joining 3+ tables with `count(*)` / `sum() over (...)` / "first X, last X" logic that must be exactly right | `analyst` if `fast-edit` fails the user's verification |
+| **Warehouse-state work** | column-level lineage, downstream-impact, cross-DB migration / parity, query cost attribution against a real warehouse, schema diff between environments, PII detection, FinOps reporting | `builder` (default — has warehouse tools enabled) |
+| **Vague debug** ("X is broken", "make it work", "fix this") | unspecified failure mode | **Don't delegate yet.** Ask the user for the specific error message or symptom before invoking any agent — empirically all three agents fail vague debug prompts at ~700K tokens each. |
+
+**Decision policy:** start with `fast-edit` for any dbt/SQL task. If the user reports the result is wrong (e.g. aggregation values don't match), retry with `analyst`. Only use `builder` when the task genuinely needs the warehouse-investigation tools (it's 10–20× more expensive than fast-edit and rarely required).
+
+### Step 2 — invoke with the chosen agent
+
+Pass the task through a here-doc into a variable so the shell never
+command-substitutes anything the user typed (a task like
+`refactor `whoami` and $(rm -rf ~)` would otherwise fire `whoami` and
+`rm -rf ~` before `altimate-code` ever runs). Write the result to a
+private temporary file, not a shared one under `/tmp`:
 
 ```bash
-altimate-code run "<user's task, verbatim>" \
+TASK="$(cat <<'ALTIMATE_TASK'
+<user's task, verbatim>
+ALTIMATE_TASK
+)"
+umask 077
+OUTPUT_FILE="$(mktemp -t altimate-result.XXXXXX.md)"
+altimate-code run "$TASK" \
+  --agent <fast-edit|analyst|builder> \
   --yolo \
-  --output /tmp/altimate-result.md \
+  --output "$OUTPUT_FILE" \
   --dir "$(pwd)"
 ```
 
-Then `Read /tmp/altimate-result.md` and emit its contents to the user without re-summarising, re-formatting, or commenting on the result. altimate-code has already produced the answer.
+Then `Read "$OUTPUT_FILE"` and emit its contents to the user without re-summarising, re-formatting, or commenting on the result. altimate-code has already produced the answer. Delete `"$OUTPUT_FILE"` after presenting so warehouse rows, lineage, or PII findings don't linger on disk.
 
 ### Required flags
 
 | Flag | Why it is required |
 |---|---|
+| `--agent <name>` | Picks the agent persona. Default `builder` is overkill for simple edits — see the classification table above. Wrong agent = either 10× too expensive (using `builder` on a rename) or wrong-answer (using `fast-edit` on a multi-table join). |
 | `--yolo` | Non-interactive mode. Without this the subprocess hangs on the first permission prompt and you will time out. |
-| `--output /tmp/altimate-result.md` | Captures the final response. Without this you lose the answer to stdout-buffering and can't reliably read it back. |
+| `--output "$OUTPUT_FILE"` | Captures the final response. Use the private `mktemp` file from above — do NOT use a fixed path like `/tmp/altimate-result.md`; concurrent sessions clobber each other and a world-readable fixed path leaks data. |
 | `--dir "$(pwd)"` | Runs altimate-code in the current project so it picks up dbt project config, profiles.yml, etc. |
+
+### Follow-up tasks in the same project
+
+When the user makes a follow-up data task in the same project after a successful altimate-code delegation, prefer `--continue` to resume the warm session instead of starting a fresh one. Same here-doc + `mktemp` pattern:
+
+```bash
+TASK="$(cat <<'ALTIMATE_TASK'
+<follow-up task>
+ALTIMATE_TASK
+)"
+umask 077
+OUTPUT_FILE="$(mktemp -t altimate-result.XXXXXX.md)"
+altimate-code run "$TASK" \
+  --agent <fast-edit|analyst|builder> \
+  --yolo \
+  --output "$OUTPUT_FILE" \
+  --dir "$(pwd)" \
+  --continue   # resumes the most recent session in this dir
+```
+
+altimate-code's prompt cache is warm in a continued session — project structure, profiles.yml, schema index, source definitions don't need to be re-investigated. Cache reads are billed at a fraction of fresh input on altimate-gateway. The downside is zero: if there's no useful cached context for the new task, you pay normal cold cost.
+
+If the user starts a clearly unrelated workflow (different project, different schema, different debugging thread), drop `--continue` and start fresh — the warm cache is irrelevant and you'd carry unrelated history into the prompt.
 
 ## Failure modes — route every one to the user
 
@@ -62,6 +114,6 @@ In every row, the instruction to the user is the action — you do not retry the
 
 ## Notes
 
-- altimate-code runs its own LLM, separate from Claude Code's. Costs and rate limits accrue to altimate-code's configured provider.
+- altimate-code runs its own LLM, separate from the host agent's. Costs and rate limits accrue to altimate-code's configured provider.
 - Sessions persist in altimate-code's local store — `altimate-code session list` shows prior runs; `--continue` resumes the latest, `--session <id>` resumes a specific one.
 - For very long tasks, the `--output` file is the source of truth — stdout buffering can drop content.

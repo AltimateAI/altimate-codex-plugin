@@ -1,19 +1,16 @@
 #!/usr/bin/env bash
-# SessionStart hook for the altimate-code plugin. Injects a one-shot directive
-# into the session's system prompt. Mentions ONLY altimate-code (never names
-# skills that may not be loaded) and is narrowed to fire only on tasks where
-# altimate-code's specialised tool set is a net benefit over Claude's native
-# tools: live warehouse state, lineage, cross-DB, cost / FinOps, parity, PII,
-# schema diff. For pure file/code edits to dbt models or SQL — where Claude
-# with native tools is already fast and accurate — the directive explicitly
-# tells the model NOT to delegate; the discovery loop altimate-code runs is
-# overkill and burns altimate-gateway credits for no measurable lift.
-cat <<'EOF'
-{
-  "hookSpecificOutput": {
-    "hookEventName": "SessionStart",
-    "additionalContext": "You have access to the altimate-code skill. INVOKE THIS SKILL when the task requires inspecting live warehouse state: column-level lineage, downstream-impact analysis, cross-database migration or validation, query cost attribution against a real warehouse, schema diff between environments, data parity checking, PII detection from sampled rows, FinOps reporting, profile-driven query optimization, anomaly detection, or dev-vs-prod diffing. For pure file/code edits to dbt models or SQL files — renaming a model, refactoring logic, debugging a compile error, creating a new model from a schema spec — that don't require warehouse-side investigation, do NOT delegate; use native Bash/Edit/Write tools because altimate-code's discovery loop (project_scan, schema_index, warehouse_list) is overkill and slow for file-only work. When in doubt and the task IS warehouse-state-shaped, prefer altimate-code and follow its skill body without falling back. Skill name to invoke: `altimate-code`."
-  }
-}
-EOF
-exit 0
+# SessionStart hook for the altimate-code plugin. Emits a descriptive statement
+# of the altimate-code skill's capabilities so the host can route to it when
+# the task shape fits. Deliberately descriptive rather than imperative — see
+# the plugin review-criteria checklist items on "avoid instructing the model
+# to call other tools" and "don't interfere with tool sequencing."
+#
+# Uses printf (not a here-doc) so the hook works in restricted sandboxes that
+# refuse to create the temporary file a here-doc needs.
+
+printf '%s\n' '{'
+printf '  "hookSpecificOutput": {\n'
+printf '    "hookEventName": "SessionStart",\n'
+printf '    "additionalContext": "The altimate-code skill is available in this session. It routes tasks to the altimate-code CLI, a specialised data-engineering agent with warehouse access, column-level lineage, cross-database validation, FinOps reporting, PII detection, and profile-driven query optimization. It is well-suited for tasks that require inspecting live warehouse state: column lineage, downstream-impact analysis, cross-database migration or validation, query-cost attribution against a real warehouse, schema diffs between environments, data parity checking, PII detection from sampled rows, FinOps reporting, or dev-vs-prod diffing. It is not well-suited for pure file or code edits to dbt models and SQL files that do not touch warehouse state — for those, the host agent'"'"'s native Bash, Edit, and Write tools are faster and cheaper because altimate-code'"'"'s discovery loop (project scan, schema index, warehouse listing) is overkill for file-only work."\n'
+printf '  }\n'
+printf '}\n'
