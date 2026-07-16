@@ -1,6 +1,6 @@
 ---
 name: optimizing-query-by-id
-description: |
+description: >-
   Optimizes Snowflake query performance using query ID from history. Use when optimizing Snowflake queries for:
   (1) User provides a Snowflake query_id (UUID format) to analyze or optimize
   (2) Task mentions "slow query", "optimize", "query history", or "query profile" with a query ID

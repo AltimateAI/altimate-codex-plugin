@@ -1,6 +1,6 @@
 ---
 name: testing-dbt-models
-description: |
+description: >-
   Adds schema tests and data quality validation to dbt models. Use when working with dbt tests for:
   (1) Adding or modifying tests in schema.yml files
   (2) Task mentions "test", "validate", "data quality", "unique", "not_null", or "accepted_values"

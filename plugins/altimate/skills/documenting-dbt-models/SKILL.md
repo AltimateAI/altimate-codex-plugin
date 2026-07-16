@@ -1,6 +1,6 @@
 ---
 name: documenting-dbt-models
-description: |
+description: >-
   Documents dbt models and columns in schema.yml. Use when working with dbt documentation for:
   (1) Adding model descriptions or column definitions to schema.yml
   (2) Task mentions "document", "describe", "description", "dbt docs", or "schema.yml"

@@ -1,6 +1,6 @@
 ---
 name: refactoring-dbt-models
-description: |
+description: >-
   Safely refactors dbt models with downstream impact analysis. Use when restructuring dbt models for:
   (1) Task mentions "refactor", "restructure", "extract", "split", "break into", or "reorganize"
   (2) Extracting CTEs to intermediate models or creating macros

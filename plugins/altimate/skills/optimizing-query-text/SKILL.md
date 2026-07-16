@@ -1,6 +1,6 @@
 ---
 name: optimizing-query-text
-description: |
+description: >-
   Optimizes Snowflake SQL query performance from provided query text. Use when optimizing Snowflake SQL for:
   (1) User provides or pastes a SQL query and asks to optimize, tune, or improve it
   (2) Task mentions "slow query", "make faster", "improve performance", "optimize SQL", or "query tuning"

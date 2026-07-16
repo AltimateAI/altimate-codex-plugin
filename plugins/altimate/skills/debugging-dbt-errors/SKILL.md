@@ -1,6 +1,6 @@
 ---
 name: debugging-dbt-errors
-description: |
+description: >-
   Debugs and fixes dbt errors systematically. Use when working with dbt errors for:
   (1) Task mentions "fix", "error", "broken", "failing", "debug", "wrong", or "not working"
   (2) Compilation Error, Database Error, or test failures occur

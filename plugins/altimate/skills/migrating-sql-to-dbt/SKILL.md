@@ -1,6 +1,6 @@
 ---
 name: migrating-sql-to-dbt
-description: |
+description: >-
   Converts legacy SQL to modular dbt models. Use when migrating SQL to dbt for:
   (1) Converting stored procedures, views, or raw SQL files to dbt models
   (2) Task mentions "migrate", "convert", "legacy SQL", "transform to dbt", or "modernize"

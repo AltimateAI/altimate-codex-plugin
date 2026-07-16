@@ -1,6 +1,6 @@
 ---
 name: developing-incremental-models
-description: |
+description: >-
   Develops and troubleshoots dbt incremental models. Use when working with incremental materialization for:
   (1) Creating new incremental models (choosing strategy, unique_key, partition)
   (2) Task mentions "incremental", "append", "merge", "upsert", or "late arriving data"

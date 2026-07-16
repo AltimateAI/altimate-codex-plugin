@@ -1,6 +1,6 @@
 ---
 name: creating-dbt-models
-description: |
+description: >-
   Creates dbt models following project conventions. Use when working with dbt models for:
   (1) Creating new models (any layer - discovers project's naming conventions first)
   (2) Task mentions "create", "build", "add", "write", "new", or "implement" with model, table, or SQL

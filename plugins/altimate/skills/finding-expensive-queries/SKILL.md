@@ -1,6 +1,6 @@
 ---
 name: finding-expensive-queries
-description: |
+description: >-
   Finds and ranks expensive Snowflake queries by cost, time, or data scanned. Use when:
   (1) User asks to find slow, expensive, or problematic queries
   (2) Task mentions "query history", "top queries", "most expensive", or "slowest queries"
