@@ -73,6 +73,10 @@ npm install -g altimate-code
 
 Node 20+. After install, run `altimate-code` once to configure your LLM provider auth and warehouse connections through the TUI.
 
-## License
+## License & legal
 
-MIT — see [LICENSE](./LICENSE).
+- **License:** MIT — see [LICENSE](./LICENSE).
+- **Privacy:** [PRIVACY.md](./PRIVACY.md) — what the plugin collects, what it doesn't, and where prompts go.
+- **Terms of use:** [TERMS.md](./TERMS.md) — governs your use of the plugin and the connected Altimate services.
+- **Security disclosure:** [SECURITY.md](./SECURITY.md) — how to report a vulnerability.
+- **Contributing:** [CONTRIBUTING.md](./CONTRIBUTING.md) · [Code of Conduct](./CODE_OF_CONDUCT.md).
