@@ -20,8 +20,13 @@ altimate-codex-plugin/
 │       ├── .codex-plugin/
 │       │   └── plugin.json                     # plugin manifest
 │       ├── skills/
-│       │   └── altimate-code/
-│       │       └── SKILL.md                    # delegation logic
+│       │   ├── altimate-code/
+│       │   │   └── SKILL.md                    # delegation logic
+│       │   └── review/
+│       │       └── SKILL.md                    # dbt/SQL PR reviewer routing
+│       ├── commands/
+│       │   ├── altimate.md                     # /altimate-code:altimate <task>
+│       │   └── review.md                       # /altimate-code:review [scope]
 │       ├── hooks/
 │       │   ├── hooks.json                      # SessionStart hook definition
 │       │   └── altimate-code-session-start.sh  # SessionStart hook script
@@ -38,9 +43,11 @@ altimate-codex-plugin/
 
 ## What to change where
 
-- **Routing behavior** (when Codex picks up the skill): edit `plugins/altimate-code/skills/altimate-code/SKILL.md` frontmatter description and/or `plugins/altimate-code/hooks/altimate-code-session-start.sh` `additionalContext`.
-- **CLI invocation details** (agent selection, flags, follow-up handling): edit the workflow section in `plugins/altimate-code/skills/altimate-code/SKILL.md`.
-- **Marketplace listing** (displayName, category, defaultPrompt): edit `plugins/altimate-code/.codex-plugin/plugin.json` `interface`.
+- **Routing behavior** (when Codex picks up the delegation skill): edit `plugins/altimate-code/skills/altimate-code/SKILL.md` frontmatter description and/or `plugins/altimate-code/hooks/altimate-code-session-start.sh` `additionalContext`.
+- **Review-skill routing** (when Codex picks up the review skill): edit `plugins/altimate-code/skills/review/SKILL.md` frontmatter description.
+- **CLI invocation details** (agent selection, flags, follow-up handling): edit the workflow section in the relevant SKILL.md.
+- **Slash-command bodies** (what `/altimate-code:altimate` and `/altimate-code:review` do when invoked explicitly): edit `plugins/altimate-code/commands/altimate.md` and `plugins/altimate-code/commands/review.md` respectively.
+- **Marketplace listing** (displayName, category, defaultPrompt): edit `plugins/altimate-code/.codex-plugin/plugin.json` `interface`. Note the manifest schema's `defaultPrompt[*] <= 128` char ceiling — the marketplace rejects longer entries.
 
 ## Cross-host parity
 
@@ -87,7 +94,10 @@ codex plugin marketplace remove altimate-codex-plugin
 ## Components
 
 - **Skill** — `plugins/altimate-code/skills/altimate-code/SKILL.md` — the delegation logic (`altimate-code run "$USER_TASK"` and surface the result).
-- **Hook** — `plugins/altimate-code/hooks/hooks.json` + `plugins/altimate-code/hooks/altimate-code-session-start.sh` — SessionStart hook that publishes a static capability description so Codex can route to the skill when the task shape fits.
+- **Skill** — `plugins/altimate-code/skills/review/SKILL.md` — dbt/SQL PR reviewer routing (`altimate-code review` and present the signed verdict verbatim); declines non-dbt code review.
+- **Command** — `plugins/altimate-code/commands/altimate.md` — `/altimate-code:altimate <task>` explicit-delegation slash command.
+- **Command** — `plugins/altimate-code/commands/review.md` — `/altimate-code:review [scope]` explicit-review slash command.
+- **Hook** — `plugins/altimate-code/hooks/hooks.json` + `plugins/altimate-code/hooks/altimate-code-session-start.sh` — SessionStart hook that publishes a static capability description of both skills so Codex can route between them when the task shape fits.
 
 ## Reporting bugs / requesting features
 
