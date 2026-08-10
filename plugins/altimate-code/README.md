@@ -59,6 +59,7 @@ Full details: **[PRIVACY.md](../../PRIVACY.md)** · Security policy and disclosu
 |---|---|
 | `command not found: altimate-code` | `npm install -g altimate-code` (Node 20+), then run `altimate-code` once to configure your provider. |
 | `Unauthorized` / `No provider configured` | Run `altimate-code` to open the TUI and reconfigure your provider via `/connect`, or set the provider API key env var. |
+| `Error: Unexpected error — Unknown: FileSystem.open (…altimate-code/log/opencode.log)` | Codex's default `workspace-write` sandbox blocks writes to `~/.local/share/altimate-code/log/`, where the CLI writes its log. Re-run with `codex exec --sandbox danger-full-access …`, or pass `-c 'sandbox_permissions=["disk-full-write-access"]'` on the specific invocation. Frequent users can raise the default in `~/.codex/config.toml`. Codex has no per-plugin sandbox-permission declaration in its manifest schema today, so this is a per-invocation flag. |
 | Task hangs for several minutes | Open `altimate-code` to check for a pending prompt in the TUI, or re-run specifying a known-good model. |
 | Empty result | The task may be too ambiguous — restate with the target table, expected columns, or time window. |
 | `UNKNOWN_USER` / `Database does not exist` mid-run | The CLI connects but your warehouse credentials don't match this project — reconfigure warehouse auth in the `altimate-code` TUI or `profiles.yml`. |
