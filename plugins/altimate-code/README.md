@@ -31,19 +31,21 @@ If altimate-code is not on PATH or not configured, the plugin surfaces the failu
 
 ## How it works
 
-1. A **SessionStart hook** adds a static description of altimate-code's capabilities to the session, so Codex knows when a task fits. Codex prompts you to review and trust the hook the first time you start a session with the plugin installed; approve it once and it fires in every subsequent session.
-2. When a data-engineering task fires the **skill**, Codex runs `altimate-code run "<your task>"` locally, selecting the cheapest suitable agent persona (`fast-edit` for dbt/SQL edits, `analyst` for aggregation-heavy correctness work, `builder` for warehouse-state investigation).
-3. altimate-code plans and executes the task using your configured LLM provider. Warehouse queries, dbt commands, and file edits run **locally under your credentials**.
-4. The result is written to a private local temp file and surfaced back in your Codex conversation.
+1. A **SessionStart hook** adds a static description of the plugin's two skills to the session, so Codex knows when a task fits. Codex prompts you to review and trust the hook the first time you start a session with the plugin installed; approve it once and it fires in every subsequent session.
+2. **Delegation** — when a data-engineering task fires the **`altimate-code` skill** (or you invoke `/altimate-code:altimate <task>`), Codex runs `altimate-code run "<your task>"` locally, selecting the cheapest suitable agent persona (`fast-edit` for dbt/SQL edits, `analyst` for aggregation-heavy correctness work, `builder` for warehouse-state investigation).
+3. **Review** — when the user asks to review dbt changes / PR / commit, the **`review` skill** (or `/altimate-code:review`) runs `altimate-code review` on the current dbt project and surfaces the signed verdict envelope verbatim (APPROVE / COMMENT / REQUEST_CHANGES).
+4. altimate-code plans and executes each task using your configured LLM provider. Warehouse queries, dbt commands, and file edits run **locally under your credentials**.
+5. The result is written to a private local temp file (delegation) or streamed to stdout (review) and surfaced back in your Codex conversation.
 
 ## Example prompts
 
-Once installed, try these in Codex — the skill routes them to altimate-code automatically:
+Once installed, try these in Codex — the skills route them to altimate-code automatically. You can also invoke a skill explicitly with `/altimate-code:altimate <task>` or `/altimate-code:review [scope]`.
 
 1. **Column-level lineage** — *"Trace the `revenue_usd` column in `models/marts/fct_revenue.sql` back to its sources, and list every downstream model that would be affected if I change its rounding."*
 2. **Warehouse cost analysis** — *"Give me a cost report for our Snowflake account: the ten most expensive queries this month and any warehouses that look over-provisioned."*
 3. **Cross-dialect validation** — *"Compare `prod.orders` in Snowflake with `analytics.orders` in BigQuery row-by-row using `id` as the key, and summarize any mismatches."*
 4. **dbt test generation** — *"Generate dbt tests for `models/staging/stg_orders.sql`, including unit tests for the CASE/WHEN logic."*
+5. **dbt PR review** — *"Review my dbt changes."* or *"Review PR #1158."* → the `review` skill produces a signed verdict envelope.
 
 ## Data handling
 
@@ -57,6 +59,7 @@ Full details: **[PRIVACY.md](../../PRIVACY.md)** · Security policy and disclosu
 |---|---|
 | `command not found: altimate-code` | `npm install -g altimate-code` (Node 20+), then run `altimate-code` once to configure your provider. |
 | `Unauthorized` / `No provider configured` | Run `altimate-code` to open the TUI and reconfigure your provider via `/connect`, or set the provider API key env var. |
+| `Error: Unexpected error — Unknown: FileSystem.open (…altimate-code/log/opencode.log)` | Codex's default `workspace-write` sandbox blocks writes to `~/.local/share/altimate-code/log/`, where the CLI writes its log. Re-run with `codex exec --sandbox danger-full-access …`, or pass `-c 'sandbox_permissions=["disk-full-write-access"]'` on the specific invocation. Frequent users can raise the default in `~/.codex/config.toml`. Codex has no per-plugin sandbox-permission declaration in its manifest schema today, so this is a per-invocation flag. |
 | Task hangs for several minutes | Open `altimate-code` to check for a pending prompt in the TUI, or re-run specifying a known-good model. |
 | Empty result | The task may be too ambiguous — restate with the target table, expected columns, or time window. |
 | `UNKNOWN_USER` / `Database does not exist` mid-run | The CLI connects but your warehouse credentials don't match this project — reconfigure warehouse auth in the `altimate-code` TUI or `profiles.yml`. |
@@ -67,7 +70,10 @@ Still stuck? See [Support](#support).
 
 ## Components
 
-- **Skill** — `skills/altimate-code/SKILL.md` — delegation logic and agent-persona selection (byte-identical to the same skill shipped in the Claude Code and opencode variants of this plugin, per the [agentskills.io](https://agentskills.io) open standard)
+- **Skill** — `skills/altimate-code/SKILL.md` — delegation logic and agent-persona selection (byte-identical routing behavior with the Claude Code and opencode variants of this plugin, per the [agentskills.io](https://agentskills.io) open standard)
+- **Skill** — `skills/review/SKILL.md` — dbt/SQL PR reviewer that runs `altimate-code review` and surfaces signed verdicts; declines non-dbt code review
+- **Command** — `commands/altimate.md` — `/altimate-code:altimate <task>` explicit-delegation slash command with agent-persona selection
+- **Command** — `commands/review.md` — `/altimate-code:review [scope]` explicit-review slash command; scope can be empty (working tree), a commit SHA, a branch name, or a GitHub PR URL / number
 - **Hook** — `hooks/hooks.json` + `hooks/altimate-code-session-start.sh` — SessionStart capability description (static text only; no side effects)
 
 ## Support
