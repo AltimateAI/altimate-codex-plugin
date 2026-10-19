@@ -4,6 +4,12 @@ All notable changes to the Altimate Code Codex plugin are recorded here.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.1.0] — 2026-10-19
+
+### Fixed
+- The skills and slash commands now resolve the CLI as `altimate`, its canonical name since v0.7.1, and fall back to `altimate-code` for older npm installs. Standalone installs (curl, Homebrew, PowerShell) expose only `altimate`, so the plugin previously reported "not installed" on machines where the CLI was present.
+- Install guidance and recovery messages now list both the npm and curl install methods and point to `altimate` for first-run auth setup.
+
 ## [1.0.0] — 2026-07-18
 
 ### Added

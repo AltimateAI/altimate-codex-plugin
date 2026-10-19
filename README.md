@@ -6,7 +6,7 @@ Codex plugin that delegates dbt and warehouse work to [`altimate-code`](https://
 
 One skill: **`altimate-code`** — routes tasks that touch live warehouse state, column lineage, cross-database work, query-cost attribution, schema diffs, PII detection, or FinOps reporting to the altimate-code subprocess. The skill body encodes:
 
-- how to check that `altimate-code` is installed
+- how to resolve the CLI (`altimate` or `altimate-code`) and detect that it is not installed
 - which agent persona (`fast-edit` / `analyst` / `builder`) to pick for the task shape
 - the exact non-interactive invocation with `--yolo` / `--output` / `--dir`
 - when to add `--continue` for follow-up tasks in a warm session
@@ -68,10 +68,11 @@ altimate-codex-plugin/
 The delegation skill spawns `altimate-code` as a subprocess. Install the companion CLI:
 
 ```bash
-npm install -g altimate-code
+npm install -g altimate-code                       # Node 20+; exposes `altimate-code` and `altimate`
+curl -fsSL https://www.altimate.sh/install | bash  # standalone binary; exposes only `altimate`
 ```
 
-Node 20+. After install, run `altimate-code` once to configure your LLM provider auth and warehouse connections through the TUI.
+After install, run `altimate` once to configure your LLM provider auth and warehouse connections through the TUI.
 
 ## License & legal
 
