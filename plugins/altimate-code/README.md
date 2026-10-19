@@ -61,11 +61,11 @@ Full details: **[PRIVACY.md](../../PRIVACY.md)** · Security policy and disclosu
 | Symptom | Fix |
 |---|---|
 | `altimate-code CLI not found` (neither `altimate` nor `altimate-code` on PATH) | `npm install -g altimate-code` (Node 20+) or `curl -fsSL https://www.altimate.sh/install \| bash`, then run `altimate` once to configure your provider. |
-| `Unauthorized` / `No provider configured` | Run `altimate` to open the TUI and reconfigure your provider via `/connect`, or set the provider API key env var. |
+| `Unauthorized` / `No provider configured` | Run `altimate` (`altimate-code` on npm installs older than v0.7.1) to open the TUI and reconfigure your provider via `/connect`, or set the provider API key env var. |
 | `Error: Unexpected error — Unknown: FileSystem.open (…altimate-code/log/opencode.log)` | Codex's default `workspace-write` sandbox blocks writes to `~/.local/share/altimate-code/log/`, where the CLI writes its log. Re-run with `codex exec --sandbox danger-full-access …`, or pass `-c 'sandbox_permissions=["disk-full-write-access"]'` on the specific invocation. Frequent users can raise the default in `~/.codex/config.toml`. Codex has no per-plugin sandbox-permission declaration in its manifest schema today, so this is a per-invocation flag. |
-| Task hangs for several minutes | Open `altimate` to check for a pending prompt in the TUI, or re-run specifying a known-good model. |
+| Task hangs for several minutes | Open `altimate` (`altimate-code` on npm installs older than v0.7.1) to check for a pending prompt in the TUI, or re-run specifying a known-good model. |
 | Empty result | The task may be too ambiguous — restate with the target table, expected columns, or time window. |
-| `UNKNOWN_USER` / `Database does not exist` mid-run | The CLI connects but your warehouse credentials don't match this project — reconfigure warehouse auth in the `altimate` TUI or `profiles.yml`. |
+| `UNKNOWN_USER` / `Database does not exist` mid-run | The CLI connects but your warehouse credentials don't match this project — reconfigure warehouse auth in the `altimate` TUI (`altimate-code` on npm installs older than v0.7.1) or `profiles.yml`. |
 | Plugin installed but never delegates | Confirm the SessionStart hook is trusted — Codex asks on first use; if you skipped it, uninstall and reinstall from `/plugins`. |
 | Plugin doesn't appear in `/plugins` | Confirm the marketplace is registered: `codex plugin marketplace add AltimateAI/altimate-codex-plugin`, then re-open `/plugins`. |
 
