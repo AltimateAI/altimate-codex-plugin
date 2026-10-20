@@ -4,13 +4,15 @@ Codex plugin that delegates dbt and warehouse work to [`altimate-code`](https://
 
 ## What this gives your Codex agent
 
-One skill: **`altimate-code`** — routes tasks that touch live warehouse state, column lineage, cross-database work, query-cost attribution, schema diffs, PII detection, or FinOps reporting to the altimate-code subprocess. The skill body encodes:
+Two skills and matching slash commands. **`altimate-code`** routes tasks that touch live warehouse state, column lineage, cross-database work, query-cost attribution, schema diffs, PII detection, or FinOps reporting to the altimate-code subprocess. The skill body encodes:
 
-- how to check that `altimate-code` is installed
+- how to resolve the CLI (`altimate-code`, falling back to `altimate`) and detect that it is not installed
 - which agent persona (`fast-edit` / `analyst` / `builder`) to pick for the task shape
 - the exact non-interactive invocation with `--yolo` / `--output` / `--dir`
 - when to add `--continue` for follow-up tasks in a warm session
 - how to surface each failure mode to the user
+
+**`review`** runs `altimate-code review` on dbt project changes (a local diff or a PR) and reports the findings. The slash commands `/altimate-code:altimate` and `/altimate-code:review` invoke the same flows explicitly.
 
 The plugin also ships a `SessionStart` hook that emits a short routing hint into Codex's context so the model prefers delegation over reimplementing warehouse workflows with native tools.
 
@@ -59,8 +61,12 @@ altimate-codex-plugin/
     ├── hooks/
     │   ├── hooks.json                          # SessionStart hook definition
     │   └── altimate-code-session-start.sh      # hook script (routing hint)
+    ├── commands/
+    │   ├── altimate.md                         # /altimate-code:altimate
+    │   └── review.md                           # /altimate-code:review
     └── skills/
-        └── altimate-code/SKILL.md              # the one delegation skill
+        ├── altimate-code/SKILL.md              # delegation skill
+        └── review/SKILL.md                     # dbt change review skill
 ```
 
 ## Companion CLI
@@ -68,10 +74,11 @@ altimate-codex-plugin/
 The delegation skill spawns `altimate-code` as a subprocess. Install the companion CLI:
 
 ```bash
-npm install -g altimate-code
+npm install -g altimate-code                       # Node 20+; exposes `altimate` and `altimate-code`
+curl -fsSL https://www.altimate.sh/install | bash  # standalone binary; exposes `altimate`
 ```
 
-Node 20+. After install, run `altimate-code` once to configure your LLM provider auth and warehouse connections through the TUI.
+After install, run `altimate` once to configure your LLM provider auth and warehouse connections through the TUI.
 
 ## License & legal
 

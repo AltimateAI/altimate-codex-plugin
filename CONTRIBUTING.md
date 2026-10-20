@@ -73,6 +73,8 @@ description: >-
 
 ## Testing changes
 
+If you touch the CLI resolver block in a skill or command, run `./tests/resolve-cli.sh` — it checks every copy is identical and resolves correctly in bash and zsh.
+
 Smoke-install the plugin from your working copy:
 
 ```bash

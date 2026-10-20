@@ -18,12 +18,15 @@ Adding the marketplace makes the plugin discoverable in the `/plugins` browser b
 
 ## Prerequisites
 
-The altimate-code CLI must be installed and configured on your PATH:
+The altimate-code CLI must be installed and configured on your PATH. Either install method works:
 
 ```bash
-npm install -g altimate-code     # requires Node 20+
-altimate-code                    # launch the TUI, then run /connect to configure your LLM provider
+npm install -g altimate-code                       # requires Node 20+; exposes `altimate` and `altimate-code`
+curl -fsSL https://www.altimate.sh/install | bash  # standalone binary; exposes `altimate`
+altimate                                           # launch the TUI, then run /connect to configure your LLM provider
 ```
+
+The plugin invokes `altimate-code`, which no other tool uses, and falls back to `altimate`, so standalone installs that expose only `altimate` still work.
 
 Or configure a provider via environment variable (`ANTHROPIC_API_KEY`, `OPENAI_API_KEY`, and 20+ others — see the [altimate-code docs](https://docs.altimate.sh)).
 
@@ -57,12 +60,12 @@ Full details: **[PRIVACY.md](../../PRIVACY.md)** · Security policy and disclosu
 
 | Symptom | Fix |
 |---|---|
-| `command not found: altimate-code` | `npm install -g altimate-code` (Node 20+), then run `altimate-code` once to configure your provider. |
-| `Unauthorized` / `No provider configured` | Run `altimate-code` to open the TUI and reconfigure your provider via `/connect`, or set the provider API key env var. |
+| `altimate-code CLI not found` (neither `altimate` nor `altimate-code` on PATH) | `npm install -g altimate-code` (Node 20+) or `curl -fsSL https://www.altimate.sh/install \| bash`, then run `altimate` once to configure your provider. |
+| `Unauthorized` / `No provider configured` | Run `altimate-code` (`altimate` on installs without `altimate-code`) to open the TUI and reconfigure your provider via `/connect`, or set the provider API key env var. |
 | `Error: Unexpected error — Unknown: FileSystem.open (…altimate-code/log/opencode.log)` | Codex's default `workspace-write` sandbox blocks writes to `~/.local/share/altimate-code/log/`, where the CLI writes its log. Re-run with `codex exec --sandbox danger-full-access …`, or pass `-c 'sandbox_permissions=["disk-full-write-access"]'` on the specific invocation. Frequent users can raise the default in `~/.codex/config.toml`. Codex has no per-plugin sandbox-permission declaration in its manifest schema today, so this is a per-invocation flag. |
-| Task hangs for several minutes | Open `altimate-code` to check for a pending prompt in the TUI, or re-run specifying a known-good model. |
+| Task hangs for several minutes | Open `altimate-code` (`altimate` on installs without `altimate-code`) to check for a pending prompt in the TUI, or re-run specifying a known-good model. |
 | Empty result | The task may be too ambiguous — restate with the target table, expected columns, or time window. |
-| `UNKNOWN_USER` / `Database does not exist` mid-run | The CLI connects but your warehouse credentials don't match this project — reconfigure warehouse auth in the `altimate-code` TUI or `profiles.yml`. |
+| `UNKNOWN_USER` / `Database does not exist` mid-run | The CLI connects but your warehouse credentials don't match this project — reconfigure warehouse auth in the `altimate-code` TUI (`altimate` on installs without `altimate-code`) or `profiles.yml`. |
 | Plugin installed but never delegates | Confirm the SessionStart hook is trusted — Codex asks on first use; if you skipped it, uninstall and reinstall from `/plugins`. |
 | Plugin doesn't appear in `/plugins` | Confirm the marketplace is registered: `codex plugin marketplace add AltimateAI/altimate-codex-plugin`, then re-open `/plugins`. |
 
