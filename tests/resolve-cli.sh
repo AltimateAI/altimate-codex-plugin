@@ -46,8 +46,9 @@ for stub in only-altimate/altimate only-altimate-code/altimate-code both/altimat
   printf '#!/bin/sh\necho "ran %s"\n' "$(basename "$stub")" > "$STUBS/$stub"
   chmod +x "$STUBS/$stub"
 done
-mkdir -p "$STUBS/neither" "$STUBS/broken-altimate"
+mkdir -p "$STUBS/neither" "$STUBS/broken-altimate" "$STUBS/broken-altimate-code"
 printf 'not a program\n' > "$STUBS/broken-altimate/altimate"
+printf 'not a program\n' > "$STUBS/broken-altimate-code/altimate-code"
 
 # expect <shell> <PATH prefix> <setup> <expected exit> <expected output>
 # Runs from $STUBS without startup files and with only the stub dirs on PATH, so relative PATH
@@ -68,17 +69,19 @@ for sh in bash zsh; do
   command -v "$sh" >/dev/null || { echo "skip: $sh not installed"; continue; }
   expect "$sh" "$STUBS/only-altimate" '' 0 'ran altimate'
   expect "$sh" "$STUBS/only-altimate-code" '' 0 'ran altimate-code'
-  expect "$sh" "$STUBS/both" '' 0 'ran altimate'
-  expect "$sh" "$STUBS/neither" '' 127 'altimate-code CLI not found (tried altimate, altimate-code)'
+  expect "$sh" "$STUBS/both" '' 0 'ran altimate-code'
+  expect "$sh" "$STUBS/only-altimate:$STUBS/only-altimate-code" '' 0 'ran altimate-code'
+  expect "$sh" "$STUBS/neither" '' 127 'altimate-code CLI not found (tried altimate-code, altimate)'
   expect "$sh" "$STUBS/only-altimate" "$ALIAS_SETUP" 0 'ran altimate'
   expect "$sh" "$STUBS/only-altimate" "$ALIAS_SETUP; altimate() { echo function; }" 0 'ran altimate'
   expect "$sh" "$STUBS/only-altimate" 'altimate-code() { echo function; }' 0 'ran altimate'
   expect "$sh" "$STUBS/only-altimate-code" 'shopt -s expand_aliases 2>/dev/null; alias altimate=altimate-code' 0 'ran altimate-code'
   expect "$sh" "$STUBS/only-altimate-code" 'altimate-code() { echo function; }' 0 'ran altimate-code'
   expect "$sh" "$STUBS/only-altimate-code" 'shopt -s expand_aliases 2>/dev/null; alias altimate-code="echo alias"' 0 'ran altimate-code'
-  expect "$sh" "$STUBS/neither" "$ALIAS_SETUP; altimate() { echo function; }" 127 'altimate-code CLI not found (tried altimate, altimate-code)'
+  expect "$sh" "$STUBS/neither" "$ALIAS_SETUP; altimate() { echo function; }" 127 'altimate-code CLI not found (tried altimate-code, altimate)'
   expect "$sh" "$STUBS/broken-altimate:$STUBS/only-altimate-code" '' 0 'ran altimate-code'
-  expect "$sh" "$STUBS/broken-altimate" '' 127 'altimate-code CLI not found (tried altimate, altimate-code)'
+  expect "$sh" "$STUBS/broken-altimate-code:$STUBS/only-altimate" '' 0 'ran altimate'
+  expect "$sh" "$STUBS/broken-altimate" '' 127 'altimate-code CLI not found (tried altimate-code, altimate)'
   expect "$sh" "relative dir" '' 0 'ran altimate'
 done
 

@@ -18,14 +18,14 @@ Run the `altimate-code review` CLI on the current dbt project and present the si
 
 1. **Verify altimate-code is on PATH.** There is no separate check: the resolver below runs first in the same shell command as the review, before any `gh pr checkout`. If it exits 127 with `altimate-code CLI not found`, tell the user: `"altimate-code is not installed. Install with 'npm install -g altimate-code' (Node 20+) or 'curl -fsSL https://www.altimate.sh/install | bash', then run 'altimate' once to configure your provider and warehouse auth."` — then STOP.
 
-   The CLI ships under two names: npm and Homebrew installs expose both `altimate` and `altimate-code`, while older curl and PowerShell installs expose only `altimate`. Every review command below runs through `"$ALTIMATE_BIN"`, in the same shell command as this resolver (shell state does not persist between commands). The lookup ignores aliases and shell functions, so a user alias such as `alias altimate-code=altimate` cannot be captured as the binary path:
+   The CLI ships under two names: npm and Homebrew installs expose both `altimate` and `altimate-code`; curl and PowerShell installs from v0.7.1 on may expose only `altimate`, and installs older than v0.7.1 expose only `altimate-code`. The lookup tries `altimate-code` first, because no other tool uses that name, and falls back to `altimate`. Every review command below runs through `"$ALTIMATE_BIN"`, in the same shell command as this resolver (shell state does not persist between commands). The lookup ignores aliases and shell functions, so a user alias such as `alias altimate-code=altimate` cannot be captured as the binary path:
 
    ```bash
-   for ALTIMATE_NAME in altimate altimate-code; do
+   for ALTIMATE_NAME in altimate-code altimate; do
      ALTIMATE_BIN="$(unalias "$ALTIMATE_NAME" 2>/dev/null; unset -f "$ALTIMATE_NAME" 2>/dev/null; command -v "$ALTIMATE_NAME")"
      [ -x "$ALTIMATE_BIN" ] && break || ALTIMATE_BIN=
    done
-   [ -n "$ALTIMATE_BIN" ] || { echo "altimate-code CLI not found (tried altimate, altimate-code)" >&2; exit 127; }
+   [ -n "$ALTIMATE_BIN" ] || { echo "altimate-code CLI not found (tried altimate-code, altimate)" >&2; exit 127; }
    <the scope command chosen below, run through "$ALTIMATE_BIN">
    ```
 
@@ -65,7 +65,7 @@ Anything else (`--manifest`, `--cwd`) only if the user explicitly requested it o
 | Symptom | Message to user |
 |---|---|
 | `altimate-code CLI not found` (neither `altimate` nor `altimate-code` on PATH) | "altimate-code is not installed. Install with `npm install -g altimate-code` (Node 20+) or `curl -fsSL https://www.altimate.sh/install \| bash`, then run `altimate` once to configure auth." |
-| `Unauthorized: Incorrect auth token` | "altimate-code's LLM provider auth is misconfigured. Run `altimate` (`altimate-code` on npm installs older than v0.7.1) to reconfigure, or re-run with `--no-ai`." |
+| `Unauthorized: Incorrect auth token` | "altimate-code's LLM provider auth is misconfigured. Run `altimate-code` (`altimate` on installs without `altimate-code`) to reconfigure, or re-run with `--no-ai`." |
 | `fatal: not a git repository` | "This directory isn't a git repo. `altimate-code review` needs git to compute the diff." |
 | No `dbt_project.yml` | "No dbt project detected at this path. Run from the directory with `dbt_project.yml`." |
 | Output mentions `DEGRADED — lint-only` | Present verbatim; do NOT silently upgrade a degraded run to a full verdict. |

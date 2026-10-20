@@ -21,7 +21,7 @@ altimate-code is a CLI AI agent with 100+ purpose-built data engineering tools. 
 
 ## You MUST follow this workflow
 
-1. **Verify altimate-code is on PATH.** There is no separate check: the invocation below resolves the CLI first, ignoring aliases and shell functions, and exits 127 with `altimate-code CLI not found` before doing anything else. The CLI ships under two names: npm and Homebrew installs expose both `altimate` and `altimate-code`, while older curl and PowerShell installs expose only `altimate`. Either name is the same CLI. If the invocation exits with `altimate-code CLI not found`, jump to "Failure modes" below and stop.
+1. **Verify altimate-code is on PATH.** There is no separate check: the invocation below resolves the CLI first, ignoring aliases and shell functions, and exits 127 with `altimate-code CLI not found` before doing anything else. The CLI ships under two names: npm and Homebrew installs expose both `altimate` and `altimate-code`; curl and PowerShell installs from v0.7.1 on may expose only `altimate`, and installs older than v0.7.1 expose only `altimate-code`. The lookup tries `altimate-code` first, because no other tool uses that name, and falls back to `altimate`. Either name is the same CLI. If the invocation exits with `altimate-code CLI not found`, jump to "Failure modes" below and stop.
 2. **Run altimate-code with the user's task** using the invocation below. Pass the user's request through verbatim — do not paraphrase or split it.
 3. **Read the output file** and present it to the user as-is.
 
@@ -55,11 +55,11 @@ TASK="$(cat <<'ALTIMATE_TASK'
 <user's task, verbatim>
 ALTIMATE_TASK
 )"
-for ALTIMATE_NAME in altimate altimate-code; do
+for ALTIMATE_NAME in altimate-code altimate; do
   ALTIMATE_BIN="$(unalias "$ALTIMATE_NAME" 2>/dev/null; unset -f "$ALTIMATE_NAME" 2>/dev/null; command -v "$ALTIMATE_NAME")"
   [ -x "$ALTIMATE_BIN" ] && break || ALTIMATE_BIN=
 done
-[ -n "$ALTIMATE_BIN" ] || { echo "altimate-code CLI not found (tried altimate, altimate-code)" >&2; exit 127; }
+[ -n "$ALTIMATE_BIN" ] || { echo "altimate-code CLI not found (tried altimate-code, altimate)" >&2; exit 127; }
 umask 077
 OUTPUT_FILE="$(mktemp -t altimate-result.XXXXXX.md)"
 "$ALTIMATE_BIN" run "$TASK" \
@@ -91,11 +91,11 @@ TASK="$(cat <<'ALTIMATE_TASK'
 <follow-up task>
 ALTIMATE_TASK
 )"
-for ALTIMATE_NAME in altimate altimate-code; do
+for ALTIMATE_NAME in altimate-code altimate; do
   ALTIMATE_BIN="$(unalias "$ALTIMATE_NAME" 2>/dev/null; unset -f "$ALTIMATE_NAME" 2>/dev/null; command -v "$ALTIMATE_NAME")"
   [ -x "$ALTIMATE_BIN" ] && break || ALTIMATE_BIN=
 done
-[ -n "$ALTIMATE_BIN" ] || { echo "altimate-code CLI not found (tried altimate, altimate-code)" >&2; exit 127; }
+[ -n "$ALTIMATE_BIN" ] || { echo "altimate-code CLI not found (tried altimate-code, altimate)" >&2; exit 127; }
 umask 077
 OUTPUT_FILE="$(mktemp -t altimate-result.XXXXXX.md)"
 "$ALTIMATE_BIN" run "$TASK" \
@@ -117,10 +117,10 @@ When altimate-code returns an error, **report the error to the user and STOP**. 
 | Symptom | What to tell the user — verbatim |
 |---|---|
 | `altimate-code CLI not found` (neither `altimate` nor `altimate-code` on PATH) | "altimate-code is not installed. Install with `npm install -g altimate-code` (Node 20+) or `curl -fsSL https://www.altimate.sh/install \| bash`, then run `altimate` once to configure auth. Then re-run your request." |
-| `Unauthorized: Incorrect auth token` / `No provider configured` | "altimate-code's LLM provider auth is misconfigured. Run `altimate` (`altimate-code` on npm installs older than v0.7.1) in your terminal to open the TUI and reconfigure your provider, then re-run your request." |
-| Process hangs >5 min | "altimate-code is unresponsive. Try `altimate` (`altimate-code` on npm installs older than v0.7.1) to inspect the TUI for an open prompt, or re-run with `--model anthropic/claude-sonnet-4-6` to force a known-good model." |
+| `Unauthorized: Incorrect auth token` / `No provider configured` | "altimate-code's LLM provider auth is misconfigured. Run `altimate-code` (`altimate` on installs without `altimate-code`) in your terminal to open the TUI and reconfigure your provider, then re-run your request." |
+| Process hangs >5 min | "altimate-code is unresponsive. Try `altimate-code` (`altimate` on installs without `altimate-code`) to inspect the TUI for an open prompt, or re-run with `--model anthropic/claude-sonnet-4-6` to force a known-good model." |
 | Output file empty | "altimate-code returned without producing output. The task may be too ambiguous — please restate with more detail (target table, expected columns, time window)." |
-| Warehouse error mid-run (`UNKNOWN_USER`, `Database does not exist`) | "altimate-code can connect but the warehouse credentials it has are wrong for this project. Configure provider/warehouse auth via the `altimate` TUI (`altimate-code` on npm installs older than v0.7.1)." |
+| Warehouse error mid-run (`UNKNOWN_USER`, `Database does not exist`) | "altimate-code can connect but the warehouse credentials it has are wrong for this project. Configure provider/warehouse auth via the `altimate-code` TUI (`altimate` on installs without `altimate-code`)." |
 
 In every row, the instruction to the user is the action — you do not retry the task with native tools. If the user fixes the underlying issue and asks again, you delegate again.
 
