@@ -68,8 +68,8 @@ altimate-codex-plugin/
 The delegation skill spawns `altimate-code` as a subprocess. Install the companion CLI:
 
 ```bash
-npm install -g altimate-code                       # Node 20+; exposes `altimate-code` and `altimate`
-curl -fsSL https://www.altimate.sh/install | bash  # standalone binary; exposes only `altimate`
+npm install -g altimate-code                       # Node 20+; exposes `altimate` and `altimate-code`
+curl -fsSL https://www.altimate.sh/install | bash  # standalone binary; exposes `altimate`
 ```
 
 After install, run `altimate` once to configure your LLM provider auth and warehouse connections through the TUI.

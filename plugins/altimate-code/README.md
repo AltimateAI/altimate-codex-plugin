@@ -21,8 +21,8 @@ Adding the marketplace makes the plugin discoverable in the `/plugins` browser b
 The altimate-code CLI must be installed and configured on your PATH. Either install method works:
 
 ```bash
-npm install -g altimate-code                       # requires Node 20+; exposes `altimate-code` and `altimate`
-curl -fsSL https://www.altimate.sh/install | bash  # standalone binary; exposes only `altimate`
+npm install -g altimate-code                       # requires Node 20+; exposes `altimate` and `altimate-code`
+curl -fsSL https://www.altimate.sh/install | bash  # standalone binary; exposes `altimate`
 altimate                                           # launch the TUI, then run /connect to configure your LLM provider
 ```
 
