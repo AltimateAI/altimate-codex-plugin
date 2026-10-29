@@ -1,0 +1,12 @@
+{
+  "mcpServers": {
+    "altimate-code": {
+      "command": "bash",
+      "cwd": ".",
+      "env_vars": ["ALTIMATE_PROJECT_DIR"],
+      "args": [
+        "./scripts/serve.sh"
+      ]
+    }
+  }
+}

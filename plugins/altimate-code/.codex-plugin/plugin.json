@@ -1,7 +1,7 @@
 {
   "name": "altimate-code",
-  "version": "1.1.0",
-  "description": "Delegates dbt and warehouse work to altimate-code, a specialized CLI agent with 100+ purpose-built data tools (SQL analysis, column-level lineage, dbt build/test/run, warehouse profiling, FinOps, connectivity to Snowflake, BigQuery, Redshift, Databricks, Postgres, MySQL, DuckDB).",
+  "version": "1.3.0",
+  "description": "MCP-first data tools with model-free CLI fallback, workspace knowledge, and explicit dbt job delegation.",
   "author": {
     "name": "Altimate AI",
     "email": "support@altimate.ai",
@@ -24,8 +24,8 @@
   "commands": "./commands/",
   "interface": {
     "displayName": "Altimate Code",
-    "shortDescription": "Delegate dbt + warehouse work to the altimate-code CLI agent",
-    "longDescription": "Routes data-engineering tasks — column-level lineage, cross-database validation, warehouse profiling, FinOps reporting, PII detection, dbt builds against real warehouses — to altimate-code, which already ships the specialised sub-skills internally. Ships two skills: `altimate-code` for delegation and `review` for dbt/SQL PR review with signed verdict envelopes. Use this plugin when you want Codex to hand a task to altimate-code rather than reimplement the workflow with native tools.",
+    "shortDescription": "MCP-first data tools with a model-free CLI fallback",
+    "longDescription": "Use Altimate data tools directly for warehouse queries, lineage, PII, data diffs and FinOps. Codex supplies the reasoning. When MCP tools are unavailable, use the model-free tool CLI. Explicit long-running jobs and dbt review use the companion agent.",
     "developerName": "Altimate AI",
     "category": "Developer Tools",
     "capabilities": [
@@ -43,5 +43,7 @@
     "privacyPolicyURL": "https://altimate.ai/privacy",
     "termsOfServiceURL": "https://altimate.ai/terms",
     "brandColor": "#3B82F6"
-  }
+  },
+  "mcpServers": "./.mcp.json",
+  "hooks": "./hooks/hooks.json"
 }

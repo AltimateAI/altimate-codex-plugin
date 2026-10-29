@@ -1,24 +1,7 @@
 ---
 name: review
 description: >-
-  Review dbt project changes — dbt models (models/**/*.sql), schema.yml,
-  dbt_project.yml, sources.yml, macros, snapshots, seeds. Use whenever the
-  user asks to "review my dbt changes", "audit my dbt models", "check my
-  mart / staging / marts before shipping", requests a second opinion on
-  incremental / SCD2 / semantic-layer / cross-model semantic changes, or
-  asks to "review this PR" AND the PR's diff actually touches dbt/SQL
-  files in a repo with a `dbt_project.yml`. Runs altimate-code review to
-  emit a signed verdict (APPROVE / COMMENT / REQUEST_CHANGES) with column
-  lineage, query equivalence, dbt anti-pattern detection, materialization /
-  tier-gated blast-radius analysis, and sampled-row PII screening — none of
-  which native Codex tools or a generic code-review skill can produce.
-  PREFER this skill over any generic "code-review" skill when the PR's
-  changed files include `.sql` under `models/`, `schema.yml`,
-  `dbt_project.yml`, `sources.yml`, `.yml` under `snapshots/` or
-  `seeds/`, or Jinja macros under `macros/`. Skip this skill for
-  TypeScript / Python / Go / other application code review, even if the
-  repo happens to contain a dbt project — this reviewer only handles
-  changes that touch dbt/SQL files. Read-only — never modifies files.
+  Review dbt/SQL changes (models, schema.yml, sources, macros, snapshots, seeds) with altimate-code review: lineage, query equivalence, dbt anti-patterns, blast radius, PII. Prefer over generic code review when the diff touches dbt/SQL files; skip other code. Read-only.
 ---
 
 # altimate-code review
@@ -27,9 +10,9 @@ description: >-
 
 ## You MUST follow this workflow
 
-1. **Verify altimate-code is on PATH.** There is no separate check: the resolver below runs first in the same shell command as the review, before any `gh pr checkout`. If it exits 127 with `altimate-code CLI not found`, jump to "Failure modes" below and stop.
+1. **Verify altimate-code is on PATH.** There is no separate check: the resolver below runs first in the same shell call as the review, before any `gh pr checkout`. If it exits 127 with `altimate-code CLI not found`, jump to "Failure modes" below and stop.
 
-   The CLI ships under two names: npm and Homebrew installs expose both `altimate` and `altimate-code`; curl and PowerShell installs from v0.7.1 on may expose only `altimate`, and installs older than v0.7.1 expose only `altimate-code`. The lookup tries `altimate-code` first, because no other tool uses that name, and falls back to `altimate`. Every review command below runs through `"$ALTIMATE_BIN"`, in the same shell command as this resolver (shell state does not persist between commands). The lookup ignores aliases and shell functions, so a user alias such as `alias altimate-code=altimate` cannot be captured as the binary path:
+   The CLI ships under two names: npm and Homebrew installs expose both `altimate` and `altimate-code`, while older curl and PowerShell installs expose only `altimate`. Every review command below runs through `"$ALTIMATE_BIN"`, in the same shell call as this resolver (shell state does not persist between calls). The lookup ignores aliases and shell functions, so a user alias such as `alias altimate-code=altimate` cannot be captured as the binary path:
 
    ```bash
    for ALTIMATE_NAME in altimate-code altimate; do
@@ -53,7 +36,7 @@ description: >-
 | User says | Command to run |
 |---|---|
 | "review my changes" / "review this branch" / "audit my dbt work" / no scope specified | `"$ALTIMATE_BIN" review` (default: working tree vs merge-base with `origin/main`) |
-| "review PR #123" or gives a GitHub PR URL | `gh pr checkout 123 && "$ALTIMATE_BIN" review`, in the same shell command after the resolver so a missing CLI stops before the checkout |
+| "review PR #123" or gives a GitHub PR URL | `gh pr checkout 123 && "$ALTIMATE_BIN" review`, in the same shell call after the resolver so a missing CLI stops before the checkout |
 | "review commit `abc123`" | `"$ALTIMATE_BIN" review --base abc123~1 --head abc123` |
 | "compare staging to prod" / "review the diff between two branches" | `"$ALTIMATE_BIN" review --base prod --head staging` |
 
@@ -79,8 +62,8 @@ description: >-
 
 | Symptom | Message to the user |
 |---|---|
-| `altimate-code CLI not found` (neither `altimate` nor `altimate-code` on PATH) | "altimate-code is not installed. Install with `npm install -g altimate-code` (Node 20+) or `curl -fsSL https://www.altimate.sh/install \| bash`, then run `altimate` once to configure your provider and warehouse auth. Then re-run the review." |
-| `Unauthorized: Incorrect auth token` / `No provider configured` | "altimate-code's LLM provider auth is misconfigured. Run `altimate-code` (`altimate` on installs without `altimate-code`) to reconfigure — or re-run with `--no-ai` to skip the LLM lane entirely and get a deterministic-only review." |
+| `altimate-code CLI not found` (neither `altimate-code` nor `altimate` on PATH) | "altimate-code is not installed. Install with `npm install -g altimate-code` (Node 20+) or `curl -fsSL https://www.altimate.sh/install \| bash`, then run `altimate` once to configure your provider and warehouse auth. Then re-run the review." |
+| `Unauthorized: Incorrect auth token` / `No provider configured` | "altimate-code's LLM provider auth is misconfigured. Run `altimate` (`altimate-code` on npm installs older than v0.7.1) to reconfigure — or re-run with `--no-ai` to skip the LLM lane entirely and get a deterministic-only review." |
 | `fatal: not a git repository` | "This directory isn't a git repo. `altimate-code review` computes the diff via git — run from a dbt project inside a git worktree." |
 | No `dbt_project.yml` found | "No dbt project detected at this path. The review needs a dbt project to compile models against. Run from the directory containing `dbt_project.yml`." |
 | Output says `DEGRADED — lint-only` | Present that note verbatim. Do not silently upgrade a degraded run to a full verdict. |
