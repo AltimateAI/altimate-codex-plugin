@@ -126,6 +126,19 @@ class SyncWorkspaceSkillsTest(unittest.TestCase):
             m.sync(self.project)
         self.assertFalse(os.path.exists(self.skill_path('a')))
 
+    def test_invalid_manifest_cannot_prevent_account_cleanup(self):
+        for invalid in (None, [], {'skills': None}, {'skills': 42}, {'skills': []}):
+            with self.subTest(manifest=invalid):
+                self.sign_in(TENANT, API_URL+'/')
+                self.write_snapshot({'id': {'SKILL.md': '---\nname: a\ndescription: private\n---\nold account\n'}})
+                self.run_sync()
+                self.assertTrue(os.path.exists(self.skill_path('a')))
+                self.sign_in('new-tenant', API_URL+'/')
+                with open(os.path.join(self.project, SNAPSHOT, '.manifest.json'), 'w') as f:
+                    json.dump(invalid, f)
+                self.run_sync()
+                self.assertFalse(os.path.exists(self.skill_path('a')))
+
     def test_same_account_copy_survives_failed_replacement(self):
         self.write_snapshot({'id': {'SKILL.md': '---\nname: a\ndescription: private\n---\nold account\n'}})
         self.run_sync()

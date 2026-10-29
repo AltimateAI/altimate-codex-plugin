@@ -131,7 +131,9 @@ def read_snapshot(project, identity):
     try:
         with open(manifest_path, encoding="utf-8") as f:
             manifest = json.load(f)
-        ids = list(manifest.get("skills", {}))
+        if not isinstance(manifest, dict) or not isinstance(manifest.get("skills"), dict):
+            return []
+        ids = list(manifest["skills"])
         owner = (manifest.get("tenant"), str(manifest.get("apiUrl", "")).rstrip("/"), manifest.get("account"))
         if manifest.get("version") != 2:
             return []
@@ -239,7 +241,6 @@ def sync(project, wait=False):
 
 def sync_unlocked(project):
     identity = signed_in_as()
-    skills = read_snapshot(project, identity)
     target_root = os.path.join(project, SKILLS_DIR)
     changed = False
     # Remove foreign or legacy unattributed copies before any fallible copying.
@@ -257,6 +258,7 @@ def sync_unlocked(project):
             if not identity or owner != list(identity):
                 shutil.rmtree(path)
                 changed = True
+    skills = read_snapshot(project, identity)
     wanted = set()
     for source, name, description, body in skills:
         if name in wanted:
