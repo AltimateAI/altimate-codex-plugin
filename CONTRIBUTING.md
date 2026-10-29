@@ -1,6 +1,6 @@
 # Contributing
 
-Thanks for taking the time to contribute. This repo ships Codex data-tool plugins (`altimate-code` and an opt-in experimental listing) connected to the [altimate-code](https://github.com/AltimateAI/altimate-code) CLI.
+Thanks for taking the time to contribute. This repo ships the `altimate-code` Codex data-tool plugin connected to the [altimate-code](https://github.com/AltimateAI/altimate-code) CLI.
 
 ## Quick start
 
@@ -53,7 +53,7 @@ altimate-codex-plugin/
 
 Preserve data-tool behavior across the Claude, Codex and opencode variants. Host integration is intentionally different: Codex namespaces are discovered from session tools, hooks use PLUGIN_ROOT, and Codex owns MCP policy. Do not copy Claude settings detection or JavaScript UI mods into this package. Shared CLI resolver blocks remain identical within this repository.
 
-Run `bash tests/resolve-cli.sh`, `bash tests/warehouse-guard.sh`, and `python3 -B -m unittest discover -s tests -p 'test_*.py'`. The Python tests drive hooks and build an offline experimental package using a deterministic fixture runtime; they do not establish live warehouse or workspace connectivity.
+Run `bash tests/resolve-cli.sh`, `bash tests/warehouse-guard.sh`, and `python3 -B -m unittest discover -s tests -p 'test_*.py'`. The Python tests drive hooks and workspace skill synchronization using local fixtures; they do not establish live warehouse or workspace connectivity.
 
 ## Frontmatter — YAML gotcha
 

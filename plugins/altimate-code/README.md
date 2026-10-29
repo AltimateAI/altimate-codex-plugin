@@ -10,6 +10,6 @@ Long multi-step jobs use explicit `run --agent builder`; dbt/SQL review uses the
 
 Set `ALTIMATE_ROUTE_GUARD=1` before starting Codex to enable the recognized-direct-query routing aid. It is disabled by default, fails open on parse errors, and is not a security control. Hooks require trust in Codex. Normal file operations, dbt compile/parse, and Altimate tool calls pass.
 
-Try: “Compare row counts between prod and staging”, “Show column lineage for dim_customers”, or “Review my dbt changes”. Enable only this listing or the experimental listing at a time.
+Try: “Compare row counts between prod and staging”, “Show column lineage for dim_customers”, or “Review my dbt changes”.
 
 Workspace tools are enabled in both modes. Cached workspace skills are mirrored into `.agents/skills` at startup and after turns; stale snapshots refresh in the background at most once per hour after success. Use the refresh-skills skill for an immediate bounded refresh, or set `ALTIMATE_CODEX_SKILL_SYNC=0` to disable it. See the root guide for ownership, tenant checks and privacy.

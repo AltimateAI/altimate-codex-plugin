@@ -18,6 +18,16 @@ spec.loader.exec_module(refresh)
 
 
 class RefreshTests(unittest.TestCase):
+    def test_manual_script_is_directly_executable_and_worker_needs_project(self):
+        result = subprocess.run([str(HOOKS/'refresh-skills.sh'), '--wait'],
+                                input='', text=True, capture_output=True,
+                                env=dict(os.environ, ALTIMATE_CODEX_SKILL_SYNC='0'))
+        self.assertEqual(result.returncode, 0, result.stderr)
+        result = subprocess.run([str(HOOKS/'refresh-skills.sh'), '--worker'],
+                                input='', text=True, capture_output=True)
+        self.assertEqual(result.returncode, 2)
+        self.assertNotIn('Traceback', result.stderr)
+
     def setUp(self):
         self.tmp = tempfile.TemporaryDirectory(prefix='skill refresh ')
         self.addCleanup(self.tmp.cleanup)

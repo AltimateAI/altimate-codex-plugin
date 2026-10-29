@@ -289,6 +289,30 @@ class SyncWorkspaceSkillsTest(unittest.TestCase):
         os.chmod(os.path.join(self.project, SNAPSHOT, "sk_1", "scripts", "run.sh"), 0o755)
         self.run_sync()
         self.assertTrue(os.access(self.skill_path("a", "scripts/run.sh"), os.X_OK))
+        os.chmod(os.path.join(self.project, SNAPSHOT, "sk_1", "scripts", "run.sh"), 0o644)
+        self.run_sync()
+        self.assertFalse(os.access(self.skill_path("a", "scripts/run.sh"), os.X_OK))
+        os.chmod(os.path.join(self.project, SNAPSHOT, "sk_1", "scripts", "run.sh"), 0o755)
+        self.run_sync()
+        self.assertTrue(os.access(self.skill_path("a", "scripts/run.sh"), os.X_OK))
+
+    def test_symlink_snapshot_cannot_preserve_foreign_copies(self):
+        for relative in ('.altimate-code', '.altimate-code/skill', SNAPSHOT, SNAPSHOT+'/.manifest.json'):
+            with self.subTest(path=relative):
+                self.sign_in(TENANT, API_URL+'/')
+                self.write_snapshot({'id': {'SKILL.md': '---\nname: a\ndescription: private\n---\nprivate\n'}})
+                self.run_sync()
+                self.sign_in('other', API_URL+'/')
+                source = os.path.join(self.project, relative)
+                saved = source + '.saved'
+                os.rename(source, saved)
+                os.symlink(saved, source)
+                try:
+                    self.run_sync()
+                    self.assertFalse(os.path.exists(self.skill_path('a')))
+                finally:
+                    os.unlink(source)
+                    os.rename(saved, source)
 
     def test_second_run_reports_no_change(self):
         self.write_snapshot({"sk_1": {"SKILL.md": RISKY_SKILL}})

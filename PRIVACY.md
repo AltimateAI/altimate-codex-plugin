@@ -2,7 +2,7 @@
 
 ## Plugin and data flows
 
-The plugin registers a local Altimate MCP server and supplies skills and shell hooks. Codex may start the server when the plugin is enabled. The normal server runs from PATH; the experimental package bundles a platform-specific runtime. Hooks emit mode guidance, inspect a proposed shell command for opt-in routing, or synchronize workspace skills.
+The plugin registers a local Altimate MCP server and supplies skills and shell hooks. Codex may start the server when the plugin is enabled. The server runs from PATH. Hooks emit mode guidance, inspect a proposed shell command for opt-in routing, or synchronize workspace skills.
 
 Workspace skill synchronization reads the local workspace snapshot and Altimate sign-in credentials to verify the snapshot's tenant, API endpoint and account digest. The key is hashed locally and is never copied into mirrored skills or printed. Copies carry a digest-based ownership marker; unmatched or older unattributed copies are removed. It writes marked, sanitized skill copies under the project's `.agents/skills`. Startup and after-turn hooks may run `workspace refresh` in the background when the snapshot is absent or older than one hour, contacting the linked workspace through the companion CLI. No reasoning agent is launched and no memory publication is requested by these hooks. Set `ALTIMATE_CODEX_SKILL_SYNC=0` to disable this behavior. The companion CLI's telemetry configuration applies to refresh calls.
 
@@ -10,7 +10,7 @@ MCP and `tool run` execute data tools without a second reasoning agent. Results,
 
 Explicit `run` delegation and dbt review may send prompts and relevant data to the companion CLI's configured LLM provider. BYOK traffic follows that provider's policy. Workspace knowledge operations can use backend models and incur additional costs. Authentication and workspace operations communicate with Altimate services; credentials should be entered only through the runtime's supported authentication flow, never in chat.
 
-The experimental skill forbids automatic memory publication. Publication requires an explicit user request and an available supported operation. Delegated jobs may persist local sessions and workspace memory according to companion CLI configuration. Delete sensitive output files after presenting delegated results.
+The workspace tool instructions forbid automatic memory publication. Publication requires an explicit user request and an available supported operation. Delegated jobs may persist local sessions and workspace memory according to companion CLI configuration. Delete sensitive output files after presenting delegated results.
 
 Adding a marketplace does not enable its plugins. Install and enable the desired listing in Codex. Hook trust is separate from enabling the MCP server; skipping hook trust does not imply the MCP server is disabled. Disable the plugin or its MCP server in Codex to stop that integration.
 

@@ -108,7 +108,10 @@ def refresh(project, wait=False):
 def main():
     mode = sys.argv[1] if len(sys.argv) > 1 else '--if-stale'
     if mode not in ('--if-stale', '--wait', '--startup', '--worker'):
-        print('Expected --if-stale, --wait or --startup', file=sys.stderr)
+        print('Expected --if-stale, --wait, --startup or internal --worker <project>', file=sys.stderr)
+        return 2
+    if mode == '--worker' and len(sys.argv) != 3:
+        print('Internal --worker requires a project directory.', file=sys.stderr)
         return 2
     project = Path(sys.argv[2]).resolve() if mode == '--worker' else project_directory()
     if mode in ('--wait', '--worker'):

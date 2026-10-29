@@ -42,7 +42,6 @@ SNAPSHOT_DIR = os.path.join(".altimate-code", "skill", "_workspace")
 MANIFEST = ".manifest.json"
 SKILLS_DIR = os.path.join(".agents", "skills")
 MARKER = ".altimate-workspace-skill"
-SNAPSHOT_META = {MANIFEST, ".gitignore", ".synced-at"}
 # Codex skill names: lowercase letters, digits and hyphens.
 NAME_PATTERN = re.compile(r"^[a-z0-9][a-z0-9-]{0,63}$")
 CREDENTIALS = os.path.join(os.path.expanduser("~"), ".altimate", "altimate.json")
@@ -124,6 +123,9 @@ def signed_in_as():
 def read_snapshot(project, identity):
     """[(source dir, name, description, body)] for each usable workspace skill;
     [] when there is no readable snapshot for the signed-in tenant, so copies are removed."""
+    for relative in (".altimate-code", ".altimate-code/skill", SNAPSHOT_DIR, os.path.join(SNAPSHOT_DIR, MANIFEST)):
+        if os.path.islink(os.path.join(project, relative)):
+            return []
     root = os.path.join(project, SNAPSHOT_DIR)
     manifest_path = os.path.join(root, MANIFEST)
     if not os.path.exists(manifest_path):
@@ -203,7 +205,7 @@ def same_tree(a, b):
             for filename in filenames:
                 path = os.path.join(dirpath, filename)
                 with open(path, "rb") as f:
-                    found[os.path.relpath(path, root)] = f.read()
+                    found[os.path.relpath(path, root)] = (f.read(), os.stat(path).st_mode & 0o777)
         return found
 
     try:
@@ -214,12 +216,11 @@ def same_tree(a, b):
 
 def sync(project, wait=False):
     # Never traverse a workspace-controlled symlink into another project/account.
-    for relative in (".agents", ".agents/skills", ".altimate-code", ".altimate-code/skill",
-                     ".altimate-code/skill/_workspace", ".altimate-code/skill/_workspace/.manifest.json"):
+    for relative in (".agents", ".agents/skills"):
         if os.path.islink(os.path.join(project, relative)):
             return False
     state = os.path.join(project, ".altimate-code")
-    if not os.path.isdir(state):
+    if os.path.islink(state) or not os.path.isdir(state):
         return sync_unlocked(project)
     fd = os.open(os.path.join(state, "codex-skill-copy.lock"), os.O_CREAT | os.O_RDWR | os.O_NOFOLLOW, 0o600)
     try:

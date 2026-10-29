@@ -50,6 +50,10 @@ allow 'grep -rn trino models/'
 allow 'git commit -m "docs: psql -c example"'
 allow 'ls -la'
 allow 'psql --version'
+allow 'psql'
+allow 'psql mydb && tail -f app.log'
+deny 'psql <<SQL'
+deny 'psql < query.sql'
 [ -z "$(printf 'not json' | ALTIMATE_ROUTE_GUARD=1 bash "$GUARD")" ] || fail "bad input should allow"
 
 [ "$FAILURES" -eq 0 ] && echo "PASS" || { echo "$FAILURES failure(s)"; exit 1; }

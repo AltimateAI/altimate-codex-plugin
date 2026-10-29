@@ -11,7 +11,7 @@
 
 - MCP-first data tools with model-free CLI fallback and explicit builder delegation.
 - Quiet MCP startup, CLI mode hints, and opt-in direct-query routing guard.
-- Codex manifest wiring and a separate experimental workspace listing with verified offline runtime packaging.
+- Codex manifest wiring for MCP, hooks and skills.
 
 
 All notable changes to the Altimate Code Codex plugin are recorded here.

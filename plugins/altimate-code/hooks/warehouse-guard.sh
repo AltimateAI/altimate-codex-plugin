@@ -39,7 +39,9 @@ SQL_HINT='Direct warehouse query detected. The altimate-code CLI runs this read-
 
 if [[ "$CMD" =~ ${PREFIX}(psql|trino|clickhouse-client|clickhouse|snowsql|mysql|sqlcmd|duckdb)([[:space:]]|$) ]]; then
   # Interactive or help invocations without a query are left alone.
-  if [[ "$CMD" =~ (^|[[:space:]])(-c|--command|-e|--execute|-q|--query|-f|--file|-x)([[:space:]=]|$) ]] || [[ "$CMD" =~ (\<\<|\|[[:space:]]*(psql|trino|clickhouse|snowsql|mysql|duckdb)|\<[[:space:]]*[^[:space:]]+\.sql) ]]; then
+  INPUT_RE='(<<|\|[[:space:]]*(psql|trino|clickhouse|snowsql|mysql|duckdb)|<[[:space:]]*[^[:space:]]+\.sql)'
+  FLAGS_RE="${PREFIX}(psql|trino|clickhouse-client|clickhouse|snowsql|mysql|sqlcmd|duckdb)[[:space:]][^;&|]*(-c|--command|-e|--execute|-q|--query|-f|--file|-x)([[:space:]=]|$)"
+  if [[ "$CMD" =~ $FLAGS_RE ]] || [[ "$CMD" =~ $INPUT_RE ]]; then
     deny "$SQL_HINT"
   fi
 fi

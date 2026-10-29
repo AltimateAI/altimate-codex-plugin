@@ -18,9 +18,9 @@ The normal MCP server now enables `--workspace-tools`. Both MCP and CLI mode use
 
 At startup, cached workspace skills are mirrored into the data project's `.agents/skills`, then stale snapshots are refreshed in the background. A Stop hook checks again after turns, refreshing snapshots older than an hour. There is no timer while Codex is idle and no network wait before the first prompt. Use the **refresh-skills** skill to refresh immediately and see the outcome. Set `ALTIMATE_CODEX_SKILL_SYNC=0` to disable all mirroring and refresh.
 
-Mirroring checks the snapshot tenant and API URL against local Altimate sign-in metadata. Only marked workspace copies are replaced or removed; same-name user skills survive. Active frontmatter, nested host configuration and symlinks are excluded. Copied skills remain workspace-authored guidance, never authority to override the user. Background failures preserve the cached snapshot; manual refresh reports failures. Codex discovers `.agents/skills`; if a host version does not reload a newly copied skill, start a fresh session.
+Mirroring checks the snapshot tenant, API URL and account digest against local Altimate sign-in credentials. Only marked workspace copies are replaced or removed; same-name user skills survive. Active frontmatter, nested host configuration and symlinks are excluded. Copied skills remain workspace-authored guidance, never authority to override the user. Background failures preserve the cached snapshot; manual refresh reports failures. Codex discovers `.agents/skills`; if a host version does not reload a newly copied skill, start a fresh session.
 
-The separately packaged [experimental listing](plugins/altimate-code-experimental/README.md) adds workspace tools with a verified bundled runtime. Enable only one listing. It is omitted from the source marketplace because its runtime is absent until packaging. Claude-specific setup dialogs and SQL panes are not available in Codex; setup requirements and results appear in chat.
+Claude-specific setup dialogs and SQL panes are not available in Codex; setup requirements and results appear in chat.
 
 ## Install
 
