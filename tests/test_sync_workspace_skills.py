@@ -4,6 +4,9 @@ Run: python3 -m unittest discover -s tests -p 'test_*.py'
 """
 
 import json
+import hashlib
+import importlib.util
+from unittest.mock import patch
 import os
 import subprocess
 import sys
@@ -86,10 +89,52 @@ class SyncWorkspaceSkillsTest(unittest.TestCase):
             "version": 2,
             "tenant": TENANT,
             "apiUrl": API_URL,
+            "account": hashlib.sha256(f"{API_URL}/|{TENANT}|k".encode()).hexdigest(),
             "skills": {sid: {"updatedAt": "x", "files": {}} for sid in skills},
         }
         with open(os.path.join(root, ".manifest.json"), "w", encoding="utf-8") as f:
             json.dump(manifest, f)
+
+    def test_account_change_or_missing_key_removes_copies(self):
+        for key in ('different-key', '', None):
+            with self.subTest(key=key):
+                self.sign_in(TENANT, API_URL + '/')
+                self.write_snapshot({'id': {'SKILL.md': '---\nname: a\ndescription: private\n---\nold account\n'}})
+                self.run_sync()
+                self.assertTrue(os.path.exists(self.skill_path('a')))
+                creds = os.path.join(self.home, '.altimate', 'altimate.json')
+                with open(creds, 'w') as f:
+                    json.dump({'altimateInstanceName': TENANT, 'altimateUrl': API_URL+'/', 'altimateApiKey': key}, f)
+                self.run_sync()
+                self.assertFalse(os.path.exists(self.skill_path('a')))
+
+    def test_foreign_copy_is_removed_before_failed_replacement(self):
+        self.write_snapshot({'id': {'SKILL.md': '---\nname: a\ndescription: private\n---\nold account\n'}})
+        self.run_sync()
+        spec = importlib.util.spec_from_file_location('mirror', SCRIPT)
+        m = importlib.util.module_from_spec(spec)
+        spec.loader.exec_module(m)
+        m.CREDENTIALS = os.path.join(self.home, '.altimate', 'altimate.json')
+        self.sign_in('new-tenant', API_URL+'/')
+        manifest = os.path.join(self.project, SNAPSHOT, '.manifest.json')
+        with open(manifest) as f:
+            data = json.load(f)
+        data.update(tenant='new-tenant', account=hashlib.sha256(f'{API_URL}/|new-tenant|k'.encode()).hexdigest())
+        with open(manifest, 'w') as f:
+            json.dump(data, f)
+        with patch.object(m, 'build_copy', side_effect=OSError('copy failed')):
+            m.sync(self.project)
+        self.assertFalse(os.path.exists(self.skill_path('a')))
+
+    def test_same_account_copy_survives_failed_replacement(self):
+        self.write_snapshot({'id': {'SKILL.md': '---\nname: a\ndescription: private\n---\nold account\n'}})
+        self.run_sync()
+        spec = importlib.util.spec_from_file_location('mirror', SCRIPT)
+        m = importlib.util.module_from_spec(spec); spec.loader.exec_module(m)
+        m.CREDENTIALS = os.path.join(self.home, '.altimate', 'altimate.json')
+        with patch.object(m, 'build_copy', side_effect=OSError('copy failed')):
+            m.sync(self.project)
+        self.assertIn('old account', self.read(self.skill_path('a')))
 
     def run_sync(self):
         result = subprocess.run(

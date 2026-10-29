@@ -13,7 +13,7 @@ frontmatter keeps only `name` and `description`, no `!` is left next to a
 backtick or fence, and the bundle's other files are copied except the paths
 Codex reads as skills, hooks or other plugin components.
 
-Like altimate-code, it only serves a snapshot fetched for the Altimate tenant
+Like altimate-code, it only serves a snapshot fetched for the Altimate account
 the user is signed in to; otherwise, or when the workspace has no skills, the
 copies are removed.
 
@@ -22,11 +22,12 @@ replaced or removed, so a skill the user wrote with the same name is never
 touched; that workspace skill is skipped instead. Each copy has a `.gitignore`
 of `*`, so copies stay out of version control.
 
-Prints `changed` when it wrote or removed anything. Never raises: a failure
-leaves existing copies as they were.
+Prints `changed` when it wrote or removed anything. Failed replacements preserve
+only copies attributed to the current account; the hook entry point catches errors.
 """
 
 import json
+import hashlib
 import fcntl
 import os
 import re
@@ -110,12 +111,17 @@ def signed_in_as():
     try:
         with open(CREDENTIALS, encoding="utf-8") as f:
             creds = json.load(f)
-        return creds.get("altimateInstanceName"), creds.get("altimateUrl", "").rstrip("/")
+        tenant, url, key = (creds.get(k) for k in ("altimateInstanceName", "altimateUrl", "altimateApiKey"))
+        if not all(isinstance(value, str) and value for value in (tenant, url, key)):
+            return None
+        # Matches the companion CLI's workspace/state.ts credentialDigest.
+        account = hashlib.sha256(f"{url}|{tenant}|{key}".encode()).hexdigest()
+        return tenant, url.rstrip("/"), account
     except (OSError, ValueError, AttributeError):
         return None
 
 
-def read_snapshot(project):
+def read_snapshot(project, identity):
     """[(source dir, name, description, body)] for each usable workspace skill;
     [] when there is no readable snapshot for the signed-in tenant, so copies are removed."""
     root = os.path.join(project, SNAPSHOT_DIR)
@@ -126,10 +132,12 @@ def read_snapshot(project):
         with open(manifest_path, encoding="utf-8") as f:
             manifest = json.load(f)
         ids = list(manifest.get("skills", {}))
-        owner = (manifest.get("tenant"), str(manifest.get("apiUrl", "")).rstrip("/"))
+        owner = (manifest.get("tenant"), str(manifest.get("apiUrl", "")).rstrip("/"), manifest.get("account"))
+        if manifest.get("version") != 2:
+            return []
     except (OSError, ValueError, AttributeError):
         return []
-    if not all(owner) or owner != signed_in_as():
+    if not all(owner) or owner != identity:
         return []
     skills = []
     for skill_id in ids:
@@ -163,7 +171,7 @@ def is_blocked_dir(name):
     return name.startswith(".") or name.lower() in BLOCKED_DIRS
 
 
-def build_copy(source, name, description, body, staging):
+def build_copy(source, name, description, body, staging, identity):
     for dirpath, dirnames, filenames in os.walk(source):
         dirnames[:] = [
             d for d in dirnames if not os.path.islink(os.path.join(dirpath, d)) and not is_blocked_dir(d)
@@ -183,7 +191,7 @@ def build_copy(source, name, description, body, staging):
     with open(os.path.join(staging, ".gitignore"), "w", encoding="utf-8") as f:
         f.write("*\n")
     with open(os.path.join(staging, MARKER), "w", encoding="utf-8") as f:
-        f.write("Copied from the linked Altimate workspace by the altimate-code plugin. Edits here are replaced.\n")
+        json.dump({"identity": identity}, f)
 
 
 def same_tree(a, b):
@@ -230,9 +238,25 @@ def sync(project, wait=False):
 
 
 def sync_unlocked(project):
-    skills = read_snapshot(project)
+    identity = signed_in_as()
+    skills = read_snapshot(project, identity)
     target_root = os.path.join(project, SKILLS_DIR)
     changed = False
+    # Remove foreign or legacy unattributed copies before any fallible copying.
+    # A replacement failure may preserve only content from this same account.
+    if os.path.isdir(target_root):
+        for entry in os.listdir(target_root):
+            path = os.path.join(target_root, entry)
+            if not NAME_PATTERN.match(entry) or not is_ours(path):
+                continue
+            try:
+                with open(os.path.join(path, MARKER), encoding="utf-8") as f:
+                    owner = json.load(f).get("identity")
+            except (OSError, ValueError, AttributeError):
+                owner = None
+            if not identity or owner != list(identity):
+                shutil.rmtree(path)
+                changed = True
     wanted = set()
     for source, name, description, body in skills:
         if name in wanted:
@@ -245,7 +269,7 @@ def sync_unlocked(project):
         staging = tempfile.mkdtemp(prefix=f".{name}.", dir=target_root)
         try:
             try:
-                build_copy(source, name, description, body, staging)
+                build_copy(source, name, description, body, staging, identity)
             except (OSError, ValueError) as err:
                 print(f"altimate-code plugin: skipped workspace skill {name}: {err}", file=sys.stderr)
                 continue
