@@ -1,6 +1,6 @@
 # Contributing
 
-Thanks for taking the time to contribute. This repo ships a single Codex plugin (`altimate-code`) that delegates data-engineering tasks to the [altimate-code](https://github.com/AltimateAI/altimate-code) CLI.
+Thanks for taking the time to contribute. This repo ships the `altimate-code` Codex data-tool plugin connected to the [altimate-code](https://github.com/AltimateAI/altimate-code) CLI.
 
 ## Quick start
 
@@ -51,7 +51,9 @@ altimate-codex-plugin/
 
 ## Cross-host parity
 
-The skill body (`plugins/altimate-code/skills/altimate-code/SKILL.md`) is **byte-identical** to the same skill shipped in the Claude Code and opencode variants of this plugin, per the [agentskills.io](https://agentskills.io) open standard. If you change the skill body in this repo, you must land the same change in [`altimate-claude-plugin`](https://github.com/AltimateAI/altimate-claude-plugin) and [`altimate-opencode-plugin`](https://github.com/AltimateAI/altimate-opencode-plugin) in the same release — mismatch is a bug.
+Preserve data-tool behavior across the Claude, Codex and opencode variants. Host integration is intentionally different: Codex namespaces are discovered from session tools, hooks use PLUGIN_ROOT, and Codex owns MCP policy. Do not copy Claude settings detection or JavaScript UI mods into this package. Shared CLI resolver blocks remain identical within this repository.
+
+Run `bash tests/resolve-cli.sh`, `bash tests/warehouse-guard.sh`, and `python3 -B -m unittest discover -s tests -p 'test_*.py'`. The Python tests drive hooks and workspace skill synchronization using local fixtures; they do not establish live warehouse or workspace connectivity.
 
 ## Frontmatter — YAML gotcha
 
@@ -85,7 +87,7 @@ codex plugin marketplace add ~/code/altimateai/altimate-codex-plugin
 codex
 ```
 
-Then start a fresh Codex session in a dbt project and issue one of the sample prompts from [`plugins/altimate-code/README.md`](./plugins/altimate-code/README.md#example-prompts). You should see `altimate-code` invoked (a spinner from the CLI's TUI) rather than Codex trying to write dbt SQL directly.
+Then start a fresh Codex session in a dbt project and issue one of the sample prompts from [`plugins/altimate-code/README.md`](./plugins/altimate-code/README.md#example-prompts). Verify MCP tools are discovered and execute a read-only data question. Then disable MCP in Codex and verify model-free CLI fallback. Also test a missing CLI and a warehouse error; neither should trigger a second reasoning agent or invented data.
 
 To reset:
 
@@ -99,8 +101,12 @@ codex plugin marketplace remove altimate-codex-plugin
 - **Skill** — `plugins/altimate-code/skills/review/SKILL.md` — dbt/SQL PR reviewer routing (`altimate-code review` and present the signed verdict verbatim); declines non-dbt code review.
 - **Command** — `plugins/altimate-code/commands/altimate.md` — `/altimate-code:altimate <task>` explicit-delegation slash command.
 - **Command** — `plugins/altimate-code/commands/review.md` — `/altimate-code:review [scope]` explicit-review slash command.
-- **Hook** — `plugins/altimate-code/hooks/hooks.json` + `plugins/altimate-code/hooks/altimate-code-session-start.sh` — SessionStart hook that publishes a static capability description of both skills so Codex can route between them when the task shape fits.
+- **Hook** — `plugins/altimate-code/hooks/hooks.json` + `plugins/altimate-code/hooks/altimate-code-session-start.sh` — SessionStart mode hint and opt-in direct-query guard. No hook starts a reasoning agent.
 
 ## Reporting bugs / requesting features
 
 Please open a GitHub issue on this repo. For security-sensitive reports, see [SECURITY.md](./SECURITY.md).
+
+## Workspace skill sync
+
+The mirror writes only marked copies under the data project’s `.agents/skills`, never a provider profile. Tests inject fake Altimate metadata into the imported mirror module and leave HOME, CODEX_HOME, and inherited authentication untouched. Refresh tests use a local stub CLI and exercise fresh/stale timestamps, detached startup, lock contention, failed refresh and tenant changes. No tests invoke an LLM. Check startup and Stop wiring through Codex plugin/read; use skills/list to confirm generated project skills are recognized.

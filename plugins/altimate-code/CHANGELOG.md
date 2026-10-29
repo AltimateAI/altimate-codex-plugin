@@ -1,5 +1,19 @@
 # Changelog
 
+## 1.3.0
+
+- Enable linked workspace tools in normal MCP and model-free CLI flows.
+- Mirror tenant-matching workspace skills into Codex project skills, preserving user-owned skills and stripping active host metadata.
+- Refresh asynchronously at startup and after turns when stale, with an on-demand refresh skill and opt-out.
+- Bound concurrent refreshes and refuse symlinked destinations.
+
+## 1.2.0
+
+- MCP-first data tools with model-free CLI fallback and explicit builder delegation.
+- Quiet MCP startup, CLI mode hints, and opt-in direct-query routing guard.
+- Codex manifest wiring for MCP, hooks and skills.
+
+
 All notable changes to the Altimate Code Codex plugin are recorded here.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).

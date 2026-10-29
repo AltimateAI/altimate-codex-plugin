@@ -1,35 +1,18 @@
-# Privacy Policy — Altimate Code plugin for Codex
+# Privacy policy
 
-**Effective date:** July 18, 2026
-**Applies to:** the `altimate-code` Codex plugin distributed from this repository, and the data flows it initiates through the [altimate-code](https://github.com/AltimateAI/altimate-code) CLI.
+## Plugin and data flows
 
-This policy supplements the Altimate AI [Privacy Policy](https://www.altimate.ai/privacy) and [Terms](https://www.altimate.ai/terms), which govern Altimate services generally. Where this document is silent, the master policy applies. Questions: **info@altimate.ai**.
+The plugin registers a local Altimate MCP server and supplies skills and shell hooks. Codex may start the server when the plugin is enabled. The server runs from PATH. Hooks emit mode guidance, inspect a proposed shell command for opt-in routing, or synchronize workspace skills.
 
----
+Workspace skill synchronization reads the local workspace snapshot and Altimate sign-in credentials to verify the snapshot's tenant, API endpoint and account digest. The key is hashed locally and is never copied into mirrored skills or printed. Copies carry a digest-based ownership marker; unmatched or older unattributed copies are removed. It writes marked, sanitized skill copies under the project's `.agents/skills`. Startup and after-turn hooks may run `workspace refresh` in the background when the snapshot is absent or older than one hour, contacting the linked workspace through the companion CLI. No reasoning agent is launched and no memory publication is requested by these hooks. Set `ALTIMATE_CODEX_SKILL_SYNC=0` to disable this behavior. The companion CLI's telemetry configuration applies to refresh calls.
 
-## The short version
+MCP and `tool run` execute data tools without a second reasoning agent. Results, schema metadata and workspace context returned to Codex enter the host model context and are subject to the host's data handling. Large results may be written to local spill files. Warehouse queries use configured connections and retain warehouse costs. Do not assume all returned data remains local.
 
-- The plugin itself collects **no data**. It is a routing layer (a skill, a slash command, and a static session hook) that tells Codex when to delegate a task to the altimate-code CLI installed on your machine.
-- When a task **is** delegated, your task text is passed to the altimate-code CLI, which sends it to an LLM provider to plan and execute the work — the Altimate LLM Gateway by default, or a provider you configure (BYOK).
-- Warehouse queries, dbt commands, and file edits run **locally on your machine, under your credentials**. Your warehouse credentials are never sent to Altimate.
-- The plugin ships as opt-in. Adding the marketplace does not enable the plugin — you must explicitly install it from Codex's `/plugins` browser and approve its SessionStart hook before any delegation happens.
+Explicit `run` delegation and dbt review may send prompts and relevant data to the companion CLI's configured LLM provider. BYOK traffic follows that provider's policy. Workspace knowledge operations can use backend models and incur additional costs. Authentication and workspace operations communicate with Altimate services; credentials should be entered only through the runtime's supported authentication flow, never in chat.
 
-## What the plugin does and does not do
+The workspace tool instructions forbid automatic memory publication. Publication requires an explicit user request and an available supported operation. Delegated jobs may persist local sessions and workspace memory according to companion CLI configuration. Delete sensitive output files after presenting delegated results.
 
-The plugin contains no executable service of its own. Its only runtime behavior is a SessionStart hook that prints a fixed, static text block describing the skill's capabilities. It does not read your files, does not phone home, and does not collect analytics.
-
-Data leaves Codex's process only when the delegation skill or the `/altimate` command fires and invokes the locally installed altimate-code CLI.
-
-## Data flows when a task is delegated
-
-| Data | Where it goes | Retention |
-|---|---|---|
-| Your task prompt (verbatim) | Local altimate-code CLI → your configured LLM provider | Altimate LLM Gateway does not retain full prompts and responses after processing. BYOK providers: governed by that provider's policy — Altimate never sees this traffic. |
-| Warehouse credentials (`profiles.yml`, env vars) | Stay on your machine; used locally by the CLI | Never transmitted to Altimate |
-| Warehouse query results, dbt output, file edits | Produced locally; written to a local output file surfaced back to Codex | Local only |
-| Schema metadata indexed by the CLI | Local index on your machine | Local only |
-
-**Bring Your Own Key (BYOK):** if you configure your own provider (Anthropic, OpenAI, Bedrock, Azure OpenAI, Ollama, and others), your prompts go directly from your machine to that provider. Altimate is not in the path.
+Adding a marketplace does not enable its plugins. Install and enable the desired listing in Codex. Hook trust is separate from enabling the MCP server; skipping hook trust does not imply the MCP server is disabled. Disable the plugin or its MCP server in Codex to stop that integration.
 
 ## Usage telemetry
 
@@ -57,7 +40,7 @@ All data transmitted to Altimate services is encrypted in transit using TLS. Alt
 
 ## Your choices
 
-- **Don't install the plugin** — adding the marketplace makes it discoverable but does not install it; delegation happens only after you install from Codex's `/plugins` browser and approve its SessionStart hook.
+- **Don't install the plugin** — adding the marketplace makes it discoverable but does not install it; the integration is enabled only after you install and enable a listing in Codex. Hook trust controls hooks separately.
 - **Use BYOK** — route prompts directly to your own provider so Altimate never sees them.
 - **Disable telemetry** — see above.
 - **Contact us** — for access, correction, or deletion requests, email **info@altimate.ai**.

@@ -1,16 +1,11 @@
 #!/usr/bin/env bash
-# SessionStart hook for the altimate-code plugin. Emits a descriptive statement
-# of the altimate-code skill's capabilities so the host can route to it when
-# the task shape fits. Deliberately descriptive rather than imperative — see
-# the plugin review-criteria checklist items on "avoid instructing the model
-# to call other tools" and "don't interfere with tool sequencing."
-#
-# Uses printf (not a here-doc) so the hook works in restricted sandboxes that
-# refuse to create the temporary file a here-doc needs.
-
-printf '%s\n' '{'
-printf '  "hookSpecificOutput": {\n'
-printf '    "hookEventName": "SessionStart",\n'
-printf '    "additionalContext": "The altimate-code plugin ships two skills in this session. (1) The `altimate-code` skill routes data-engineering work to the altimate-code CLI — column-level lineage, downstream-impact, cross-database validation, FinOps, PII from sampled rows, query cost attribution, schema diffs, dev-vs-prod diffing. It is not well-suited for pure file/code edits to dbt models and SQL files that do not touch warehouse state — native Bash/Edit/Write handles those faster. (2) The `review` skill runs the altimate-code dbt PR reviewer on dbt project changes (models/**.sql, schema.yml, dbt_project.yml, sources.yml, macros, snapshots, seeds). It emits a signed verdict envelope with column lineage, query equivalence, dbt anti-pattern detection, and PII screening — none of which native tools or a generic code-review skill can compute. When the user asks to review dbt / SQL / warehouse changes, this is the specialized reviewer available. For non-dbt code review (TypeScript, Python, Go), the `review` skill declines."\n'
-printf '  }\n'
-printf '}\n'
+# Startup is a hint only. Actual session tools determine MCP availability.
+# Mirror cached skills locally; stale refresh is detached and bounded.
+# Never override Codex MCP policy or start a reasoning agent here.
+if command -v python3 >/dev/null 2>&1; then
+  bash "$(dirname "$0")/refresh-skills.sh" --startup >/dev/null 2>&1
+fi
+. "$(dirname "$0")/data-mode.sh"
+if [ "$(altimate_data_mode)" = cli ]; then
+  printf '%s\n' '{"hookSpecificOutput":{"hookEventName":"SessionStart","additionalContext":"Altimate CLI mode: use the altimate-code skill for warehouse data, lineage, PII, data diffs and FinOps. Resolve altimate-code (falling back to altimate), run tool context once, then tool run <tool> --workspace-tools --args <json> --json. These calls run no second reasoning agent. Use tool schema --workspace-tools for exact arguments. Workspace questions start with workspace_context; use workspace_skill and workspace_execute with the returned token and schemas. Tokens belong on stdin, never in command arguments. Report failures; do not bypass them with direct database clients. Plain code edits use normal tools. Explicit long jobs may use run; dbt review uses the review skill. Honor Codex permissions and the user scope."}}'
+fi
