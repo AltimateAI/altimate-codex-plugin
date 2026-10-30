@@ -4,6 +4,14 @@ All notable changes to the Altimate Code Codex plugin are recorded here.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.2.0] — 2026-10-30
+
+### Added
+- Team rules from a linked Altimate workspace apply in Codex sessions. At session start the plugin gives Codex the workspace's approved rules for the repository, the number of proposed rules waiting for you, and the owner's reviews of your proposals since your last session.
+- Corrections you make to Codex are recorded locally (UserPromptSubmit, no model call). After a turn, altimate-code checks them in the background (Stop) and keeps a proposed rule when you corrected the same topic in two sessions or corrected a team rule Codex was given.
+- `/altimate-code:rules`: answer proposed rules (send for review, approve as owner, edit, save as memory, or "Not a rule"), and see the team rules and the review status of your proposals.
+- The hooks run only in a linked project with learning on. They need an altimate-code release with `learn hook`; with an older one they do nothing.
+
 ## [1.1.0] — 2026-10-19
 
 ### Fixed
