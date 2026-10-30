@@ -56,7 +56,9 @@ Workflow (follow in order):
    - `verification_flagged`: the rule weakens verification. Ask the user to confirm explicitly. Only if they confirm, reply with `--approve-anyway`.
    - `invalid_text`: the wording was refused; ask for another wording.
    - `refused`: the workspace refused the content; offer to edit it.
+   - A message saying the proposal was queued and not sent yet: normal inside Codex's sandbox, which has no network; it is sent after the user's next turn.
    - `busy`: another session is answering it; skip it for now.
    - `not_open`: it was already answered or closed; move on.
+   - `not_available` saying it "was being answered with" another action: an earlier answer stopped part-way; offer to finish it with that action.
 
 5. **Finish** with one line on what was sent, approved, saved or dismissed, and how many proposals are still waiting. Do not change any project files.

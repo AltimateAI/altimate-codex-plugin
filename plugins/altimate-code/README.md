@@ -46,12 +46,12 @@ With learning on (the workspace's "Learn from sessions", or `altimate-code learn
 
 - **At session start** the plugin gives Codex the team rules for this repository, tells it how many proposed rules are waiting for you, and reports the owner's reviews of your proposals since your last session (approved, or rejected with the reason).
 - **When you correct Codex** ("no, we never use FLOAT for money") the correction is recorded locally. When you correct it on the same topic in two sessions, or correct a team rule it was given, altimate-code words a proposed rule after the turn, in the background.
-- **"Remember this as a team rule: …"** in a task handed to altimate-code is proposed the same way.
+- **"Remember this as a team rule: …"**, said to Codex or in a task handed to altimate-code, waits as a proposal the same way.
 - **`/altimate-code:rules`** shows the proposals waiting for you, the team rules, and the status of the rules you proposed. For each proposal you choose: send it to the workspace owner's review (or approve it, if you are the owner), edit the wording, save it as a memory, or "Not a rule". Nothing reaches teammates until the owner approves it.
 
-The same commands work in a terminal: `altimate-code learn proposals`, `altimate-code learn proposals reply <id> --send`. This needs an altimate-code release with workspace rules.
+Rule drafting uses altimate-code's own model (sign in to the Altimate LLM Gateway, or set a provider in altimate-code): if it has none it can use, the next session start says the check failed. The same commands work in a terminal: `altimate-code learn proposals`, `altimate-code learn proposals reply <id> --send`. This needs an altimate-code release with workspace rules.
 
-Codex runs `/altimate-code:rules` inside its sandbox: if it fails with `FileSystem.open (…altimate-code/log/…)`, allow the CLI's log directory as in [Troubleshooting](#troubleshooting).
+Codex runs `/altimate-code:rules` inside its sandbox: if it fails with `FileSystem.open (…altimate-code/log/…)`, allow the CLI's log directory as in [Troubleshooting](#troubleshooting). The default sandbox has no network either, so a proposal you send there is queued and goes to the owner after your next turn (the hooks run outside the sandbox).
 
 ## Example prompts
 
