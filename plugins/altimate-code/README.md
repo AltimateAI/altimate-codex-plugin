@@ -34,11 +34,24 @@ If altimate-code is not on PATH or not configured, the plugin surfaces the failu
 
 ## How it works
 
-1. A **SessionStart hook** adds a static description of the plugin's two skills to the session, so Codex knows when a task fits. Codex prompts you to review and trust the hook the first time you start a session with the plugin installed; approve it once and it fires in every subsequent session.
+1. A **SessionStart hook** adds a static description of the plugin's two skills to the session, so Codex knows when a task fits. In a linked project, the [team rules](#team-rules) hooks add the workspace's rules too. Codex prompts you to review and trust the hook the first time you start a session with the plugin installed; approve it once and it fires in every subsequent session.
 2. **Delegation** — when a data-engineering task fires the **`altimate-code` skill** (or you invoke `/altimate-code:altimate <task>`), Codex runs `altimate-code run "<your task>"` locally, selecting the cheapest suitable agent persona (`fast-edit` for dbt/SQL edits, `analyst` for aggregation-heavy correctness work, `builder` for warehouse-state investigation).
 3. **Review** — when the user asks to review dbt changes / PR / commit, the **`review` skill** (or `/altimate-code:review`) runs `altimate-code review` on the current dbt project and surfaces the signed verdict envelope verbatim (APPROVE / COMMENT / REQUEST_CHANGES).
 4. altimate-code plans and executes each task using your configured LLM provider. Warehouse queries, dbt commands, and file edits run **locally under your credentials**.
 5. The result is written to a private local temp file (delegation) or streamed to stdout (review) and surfaced back in your Codex conversation.
+
+## Team rules
+
+With learning on (the workspace's "Learn from sessions", or `altimate-code learn enable` in the project), the workspace's approved **team rules** apply to Codex itself, not only to the tasks it hands over:
+
+- **At session start** the plugin gives Codex the team rules for this repository, tells it how many proposed rules are waiting for you, and reports the owner's reviews of your proposals since your last session (approved, or rejected with the reason).
+- **When you correct Codex** ("no, we never use FLOAT for money") the correction is recorded locally. When you correct it on the same topic in two sessions, or correct a team rule it was given, altimate-code words a proposed rule after the turn, in the background.
+- **"Remember this as a team rule: …"**, said to Codex or in a task handed to altimate-code, waits as a proposal the same way. It needs the words "team rule" (or "as a rule"): "remember to run the tests" is just part of the conversation.
+- **`/altimate-code:rules`** shows the proposals waiting for you, the team rules, and the status of the rules you proposed. For each proposal you choose: send it to the workspace owner's review (or approve it, if you are the owner), edit the wording, save it as a memory, or "Not a rule". Nothing reaches teammates until the owner approves it.
+
+Rule drafting uses altimate-code's own model (sign in to the Altimate LLM Gateway, or set a provider in altimate-code): if it has none it can use, the next session start says the check failed. The same commands work in a terminal: `altimate-code learn proposals`, `altimate-code learn proposals reply <id> --send`. This needs an altimate-code release with workspace rules.
+
+Codex runs `/altimate-code:rules` inside its sandbox: if it fails with `FileSystem.open (…altimate-code/log/…)`, allow the CLI's log directory as in [Troubleshooting](#troubleshooting). The default sandbox has no network either, so a proposal you send there is queued and goes to the owner after your next turn (the hooks run outside the sandbox).
 
 ## Example prompts
 
@@ -77,7 +90,8 @@ Still stuck? See [Support](#support).
 - **Skill** — `skills/review/SKILL.md` — dbt/SQL PR reviewer that runs `altimate-code review` and surfaces signed verdicts; declines non-dbt code review
 - **Command** — `commands/altimate.md` — `/altimate-code:altimate <task>` explicit-delegation slash command with agent-persona selection
 - **Command** — `commands/review.md` — `/altimate-code:review [scope]` explicit-review slash command; scope can be empty (working tree), a commit SHA, a branch name, or a GitHub PR URL / number
-- **Hook** — `hooks/hooks.json` + `hooks/altimate-code-session-start.sh` — SessionStart capability description (static text only; no side effects)
+- **Command** — `commands/rules.md` — `/altimate-code:rules` to answer proposed team rules
+- **Hooks** — `hooks/hooks.json` + `hooks/altimate-code-session-start.sh` — SessionStart capability description (static text only; no side effects); `hooks/altimate-code-workspace-rules.sh` — the [team rules](#team-rules) hooks (SessionStart, UserPromptSubmit, Stop), which call `altimate-code learn hook <event>` and never block or fail the session
 
 ## Support
 
