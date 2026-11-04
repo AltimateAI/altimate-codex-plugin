@@ -19,7 +19,7 @@ This plugin's skill forwards the user's task text to the [altimate-code](https:/
 - **Warehouse queries and dbt commands** → executed locally under your credentials by the CLI; not forwarded.
 - **Query results and file edits** → produced locally; the CLI writes an output file which the plugin surfaces back to Codex.
 
-If you do not want prompts to leave Codex's process, do not install this plugin. Adding the marketplace only makes it discoverable in Codex's `/plugins` browser — no delegation happens until you explicitly install it and approve the SessionStart hook.
+If you do not want prompts to leave Codex's process, do not install this plugin. Adding the marketplace only makes it discoverable in Codex's `/plugins` browser — no delegation happens until you explicitly install it and approve its hooks (SessionStart, UserPromptSubmit, Stop).
 
 For the complete privacy policy covering the plugin and the altimate-code CLI, see [PRIVACY.md](./PRIVACY.md).
 
