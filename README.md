@@ -45,9 +45,9 @@ To remove the marketplace registration:
 codex plugin marketplace remove altimate-codex-plugin
 ```
 
-### Trusting the SessionStart hook
+### Trusting the plugin's hooks
 
-The plugin ships a `SessionStart` hook that injects a short routing hint into the model's context so it prefers the `altimate-code` skill for warehouse-touching work. Codex does not run plugin-bundled hooks automatically — the first time you start a session with the plugin installed, Codex will prompt you to review and trust the hook definition. Approve it once and the hook fires in every subsequent session; skip it and the plugin still installs but the routing hint won't be delivered.
+The plugin ships a `SessionStart` hook that injects a short routing hint into the model's context so it prefers the `altimate-code` skill for warehouse-touching work. Codex does not run plugin-bundled hooks automatically — the first time you start a session with the plugin installed, Codex will prompt you to review and trust the hook definition. Approve it once and the hook fires in every subsequent session; skip it and the plugin still installs but the routing hint won't be delivered. The same applies to the workspace-rules hooks (SessionStart, UserPromptSubmit, Stop; see Team rules): without them, no team rules are given and no corrections are proposed.
 
 ## Layout
 
@@ -59,7 +59,7 @@ altimate-codex-plugin/
     ├── .codex-plugin/
     │   └── plugin.json                         # plugin manifest
     ├── hooks/
-    │   ├── hooks.json                          # SessionStart hook definition
+    │   ├── hooks.json                          # SessionStart, UserPromptSubmit and Stop hook definitions
     │   └── altimate-code-session-start.sh      # hook script (routing hint)
     ├── commands/
     │   ├── altimate.md                         # /altimate-code:altimate

@@ -6,6 +6,33 @@
           {
             "type": "command",
             "command": "bash \"$PLUGIN_ROOT/hooks/altimate-code-session-start.sh\""
+          },
+          {
+            "type": "command",
+            "command": "bash \"$PLUGIN_ROOT/hooks/altimate-code-workspace-rules.sh\" session-start",
+            "timeout": 15
+          }
+        ]
+      }
+    ],
+    "UserPromptSubmit": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "bash \"$PLUGIN_ROOT/hooks/altimate-code-workspace-rules.sh\" user-prompt-submit",
+            "timeout": 5
+          }
+        ]
+      }
+    ],
+    "Stop": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "bash \"$PLUGIN_ROOT/hooks/altimate-code-workspace-rules.sh\" stop",
+            "timeout": 5
           }
         ]
       }

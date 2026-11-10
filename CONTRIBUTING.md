@@ -26,12 +26,19 @@ altimate-codex-plugin/
 │       │       └── SKILL.md                    # dbt/SQL PR reviewer routing
 │       ├── commands/
 │       │   ├── altimate.md                     # /altimate-code:altimate <task>
-│       │   └── review.md                       # /altimate-code:review [scope]
+│       │   ├── review.md                       # /altimate-code:review [scope]
+│       │   └── rules.md                        # /altimate-code:rules
 │       ├── hooks/
-│       │   ├── hooks.json                      # SessionStart hook definition
-│       │   └── altimate-code-session-start.sh  # SessionStart hook script
+│       │   ├── hooks.json                      # SessionStart, UserPromptSubmit and Stop hook definitions
+│       │   ├── altimate-code-session-start.sh  # SessionStart capability description
+│       │   └── altimate-code-workspace-rules.sh # team rules hooks (session-start, user-prompt-submit, stop)
 │       ├── README.md                           # plugin-specific docs
 │       └── CHANGELOG.md                        # plugin-specific changelog
+├── .github/workflows/
+│   └── tests.yml                               # runs tests/*.sh on Linux and macOS
+├── tests/
+│   ├── resolve-cli.sh                          # CLI resolver block check
+│   └── workspace-rules-hook.sh                 # workspace-rules hook check
 ├── README.md                                   # repo overview
 ├── PRIVACY.md
 ├── TERMS.md
@@ -73,7 +80,12 @@ description: >-
 
 ## Testing changes
 
-If you touch the CLI resolver block in a skill or command, run `./tests/resolve-cli.sh` — it checks every copy is identical and resolves correctly in bash and zsh.
+Run the shell tests before opening a PR (CI runs them too, on Linux and macOS):
+
+```bash
+bash tests/resolve-cli.sh          # the CLI resolver block: every copy identical, resolves in bash and zsh
+bash tests/workspace-rules-hook.sh # the workspace-rules hook against a stub CLI (needs python3 and git)
+```
 
 Smoke-install the plugin from your working copy:
 
@@ -100,6 +112,8 @@ codex plugin marketplace remove altimate-codex-plugin
 - **Command** — `plugins/altimate-code/commands/altimate.md` — `/altimate-code:altimate <task>` explicit-delegation slash command.
 - **Command** — `plugins/altimate-code/commands/review.md` — `/altimate-code:review [scope]` explicit-review slash command.
 - **Hook** — `plugins/altimate-code/hooks/hooks.json` + `plugins/altimate-code/hooks/altimate-code-session-start.sh` — SessionStart hook that publishes a static capability description of both skills so Codex can route between them when the task shape fits.
+- **Command** — `plugins/altimate-code/commands/rules.md` — `/altimate-code:rules` to answer proposed team rules.
+- **Hooks** — `plugins/altimate-code/hooks/altimate-code-workspace-rules.sh` — the team rules hooks (SessionStart, UserPromptSubmit, Stop), which call `altimate-code learn hook <event>` only in a folder altimate-code's link cache names, and never fail the session.
 
 ## Reporting bugs / requesting features
 
