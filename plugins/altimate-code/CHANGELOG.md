@@ -8,7 +8,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 
 ### Added
 - `/altimate-code:rules` also lists your skill and knowledge requests to the linked workspace: waiting, approved, rejected with the reviewer's reason, withdrawn or removed (replaced requests are counted, not listed). It is read-only: withdraw or remove in the Altimate web app, altimate-code's TUI or its VS Code extension. Codex's default sandbox has no network, so there the command points you to `altimate-code workspace review status` in a terminal.
-- Session start tells Codex of decisions on your skill and knowledge requests since your last session, and how many still wait (from altimate-code, with no plugin change).
+- Session start tells Codex of decisions on your skill and knowledge requests since your last session, and how many still wait, whether or not team rules apply in the project (from altimate-code, with no plugin change). Codex keeps its own record of what it was told, apart from Claude Code's; the first session start in a project records decisions already kept without telling them.
 
 ## [1.2.0] — 2026-10-30
 
