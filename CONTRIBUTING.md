@@ -118,3 +118,9 @@ codex plugin marketplace remove altimate-codex-plugin
 ## Reporting bugs / requesting features
 
 Please open a GitHub issue on this repo. For security-sensitive reports, see [SECURITY.md](./SECURITY.md).
+## Directory package checks
+
+Run `bash tests/directory-zip.sh` to exercise the real builder, validate archive
+contents and listing images, and check reproducibility and rejection cases.
+Run `python3 scripts/build_directory_zip.py` to produce the upload artifact.
+See [DIRECTORY.md](DIRECTORY.md) before changing package inclusion rules.

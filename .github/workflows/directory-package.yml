@@ -1,0 +1,28 @@
+name: Directory package
+
+on:
+  pull_request:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  package:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+      - name: Test directory packaging
+        run: bash tests/directory-zip.sh
+      - name: Build skills-only directory ZIP
+        run: python3 scripts/build_directory_zip.py
+      - uses: actions/upload-artifact@v4
+        with:
+          name: altimate-code-directory
+          path: dist/*.zip
+          if-no-files-found: error

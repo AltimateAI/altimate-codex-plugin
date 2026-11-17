@@ -22,9 +22,14 @@
   ],
   "skills": "./skills/",
   "commands": "./commands/",
+  "extensions": {
+    "com.openai": {
+      "onboardingSkill": "./skills/get-started/SKILL.md"
+    }
+  },
   "interface": {
     "displayName": "Altimate Code",
-    "shortDescription": "Delegate dbt + warehouse work to the altimate-code CLI agent",
+    "shortDescription": "dbt and warehouse workflows",
     "longDescription": "Routes data-engineering tasks — column-level lineage, cross-database validation, warehouse profiling, FinOps reporting, PII detection, dbt builds against real warehouses — to altimate-code, which already ships the specialised sub-skills internally. Ships two skills: `altimate-code` for delegation and `review` for dbt/SQL PR review with signed verdict envelopes. Use this plugin when you want Codex to hand a task to altimate-code rather than reimplement the workflow with native tools.",
     "developerName": "Altimate AI",
     "category": "Developer Tools",
@@ -36,10 +41,12 @@
     "defaultPrompt": [
       "Compare row counts between prod and staging in Snowflake.",
       "Show column-level lineage for dim_customers.",
-      "Review my dbt changes.",
-      "Run altimate-code review on this PR."
+      "Review my dbt changes."
     ],
     "websiteURL": "https://altimate.ai",
+    "supportURL": "https://github.com/AltimateAI/altimate-codex-plugin/issues",
+    "logo": "./assets/logo.svg",
+    "composerIcon": "./assets/composer-icon.svg",
     "privacyPolicyURL": "https://altimate.ai/privacy",
     "termsOfServiceURL": "https://altimate.ai/terms",
     "brandColor": "#3B82F6"
