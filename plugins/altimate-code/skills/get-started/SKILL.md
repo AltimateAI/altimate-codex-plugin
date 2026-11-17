@@ -15,8 +15,11 @@ Setup runs when the user chooses it. Do not claim an automatic install-time bann
 2. If absent, offer the documented installation choices:
    `npm install -g @altimateai/altimate-code` or
    `curl -fsSL https://www.altimate.sh/install | bash`.
-   Explain the chosen command before installing; proceed only when the user
-   asks to install. Never run both methods. Recheck the CLI afterward.
+   For agent-assisted installation, explain and run only the npm command, and
+   only when the user asks to install. The standalone curl command is for the
+   user to run in their own terminal after reviewing the installer. Never execute
+   the curl pipeline or download and execute its script through a tool call.
+   Never run both methods. Recheck the CLI afterward.
 3. Ask the user to launch the resolved CLI in their terminal for interactive
    authentication and warehouse/workspace setup if needed. Never request tokens
    in chat. Do not launch an interactive TUI into a non-interactive tool call.

@@ -87,7 +87,8 @@ After install, run `altimate` once to configure your LLM provider auth and wareh
 - **Terms of use:** [TERMS.md](./TERMS.md) — governs your use of the plugin and the connected Altimate services.
 - **Security disclosure:** [SECURITY.md](./SECURITY.md) — how to report a vulnerability.
 - **Contributing:** [CONTRIBUTING.md](./CONTRIBUTING.md) · [Code of Conduct](./CODE_OF_CONDUCT.md).
-# Public directory package
+
+## Public directory package
 
 The full GitHub installation retains lifecycle hooks. A separate build produces
 a hook-free desktop directory ZIP with the same skills and guided setup.

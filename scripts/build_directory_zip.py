@@ -24,29 +24,63 @@ def require_object(value, label):
     return value
 
 
+def validate_mcp_token(value):
+    """Accept a small portable argv grammar, not arbitrary shell/launcher syntax."""
+    if not isinstance(value, str) or not value:
+        raise ValueError("MCP command, args and cwd must be nonempty strings")
+    token = value
+    if value.startswith("-"):
+        option, separator, token = value.partition("=")
+        if not re.fullmatch(r"--?[A-Za-z][A-Za-z0-9-]*", option):
+            raise ValueError("MCP options require separate values or --option=value syntax")
+        if re.search(r"token|secret|password|credential|api-?key|authorization", option, re.I):
+            raise ValueError("Pass MCP credentials through env variable references, not arguments")
+        if not separator:
+            return
+    # Variables in argv are intentionally limited to the install-relative root.
+    if token.startswith("${PLUGIN_ROOT}"):
+        token = token[len("${PLUGIN_ROOT}"):]
+        if token == "":
+            return
+        if not token.startswith("/"):
+            raise ValueError("MCP plugin-root paths require a slash separator")
+        token = token[1:]
+    if not re.fullmatch(r"[A-Za-z0-9_][A-Za-z0-9_./-]*", token):
+        raise ValueError("MCP values require portable names or ${PLUGIN_ROOT} paths")
+    if any(part in ("", ".", "..") for part in token.split("/")):
+        raise ValueError("MCP paths must not contain empty, dot or parent components")
+
+
 def validate_local_mcp(mcp):
-    servers = require_object(mcp, "MCP configuration").get("mcpServers")
+    require_object(mcp, "MCP configuration")
+    if set(mcp) != {"mcpServers"}:
+        raise ValueError("MCP configuration supports only mcpServers")
+    servers = mcp["mcpServers"]
     if not isinstance(servers, dict) or not servers:
         raise ValueError("Local MCP mode requires at least one server")
     for server in servers.values():
         require_object(server, "MCP server")
-        command = server.get("command")
-        if not isinstance(command, str) or not command.strip() or "url" in server:
+        if set(server) - {"command", "args", "cwd", "env", "type"}:
+            raise ValueError("Unsupported MCP server fields; use command, args, cwd, env and type")
+        if server.get("type", "stdio") != "stdio":
             raise ValueError("Local MCP mode accepts stdio servers only")
+        command = server.get("command")
+        validate_mcp_token(command)
+        if command.startswith("-"):
+            raise ValueError("MCP command must be an executable name or portable path")
         args = server.get("args", [])
-        if not isinstance(args, list) or any(not isinstance(arg, str) for arg in args):
+        if not isinstance(args, list):
             raise ValueError("MCP args must be an array of strings")
-        cwd = server.get("cwd", "")
-        if not isinstance(cwd, str):
-            raise ValueError("MCP cwd must be a string")
-        for value in (command, cwd, *args):
-            path = value.split("=", 1)[-1] if value.startswith("-") else value
-            if (path in (".", "..") or path.startswith(("/", "\\", "~", "./", "../", ".\\", "..\\"))
-                    or re.match(r"^[A-Za-z]:", path)):
-                raise ValueError("MCP command, args and cwd must not contain machine-local paths")
+        for value in args:
+            validate_mcp_token(value)
+        if "cwd" in server:
+            validate_mcp_token(server["cwd"])
+            if server["cwd"].startswith("-"):
+                raise ValueError("MCP cwd must be a portable path")
         env = require_object(server.get("env", {}), "MCP env")
-        if any(not isinstance(value, str) or not re.fullmatch(r"\$\{[A-Za-z_][A-Za-z0-9_]*\}", value)
-               for value in env.values()):
+        if any(not re.fullmatch(r"[A-Za-z_][A-Za-z0-9_]*", key) or
+               not isinstance(value, str) or not re.fullmatch(r"\$\{[A-Za-z_][A-Za-z0-9_]*\}", value)
+               for key, value in env.items()):
             raise ValueError("MCP env values must be ${VARIABLE} references, not literal values")
 
 
@@ -127,7 +161,7 @@ def build(repo, output, include_local_mcp=False):
     files[MANIFEST] = (json.dumps(manifest, indent=2) + "\n").encode()
     for name in ("LICENSE", "PRIVACY.md", "TERMS.md", "SECURITY.md"):
         files[name] = read_file(repo / name)
-    files["README.md"] = read_file(repo / "DIRECTORY.md")
+    files["README.md"] = read_file(repo / "DIRECTORY-README.md")
 
     mode = "-local-mcp" if include_local_mcp else ""
     output.mkdir(parents=True, exist_ok=True)

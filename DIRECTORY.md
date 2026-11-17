@@ -29,7 +29,7 @@ identical bytes. Increase the source version for a new submission.
 
 The builder includes only Markdown skills, image assets (with validated square
 SVG listing icons), the legacy manifest,
-this README and legal/security documents. It removes hooks, legacy commands,
+the user-facing DIRECTORY-README.md (as README.md) and legal/security documents. It removes hooks, legacy commands,
 app references and MCP registration, and sets `requires_local_executor: true`.
 It rejects missing manifest-referenced icons and onboarding files, and unsupported
 file types. It does not parse links or resource references inside skill Markdown;
@@ -40,10 +40,16 @@ Only after OpenAI confirms local MCP eligibility for the submitting organization
 use `python3 scripts/build_directory_zip.py --include-local-mcp`. This requires a
 source `.mcp.json` with stdio servers and creates a distinct `-local-mcp.zip`.
 MCP `env` values must be `${VARIABLE}` references; literal values are rejected.
-Absolute, home-relative and dot-relative paths in `command`, `args` (including
-`--option=path`) and `cwd` are rejected. Use portable commands and review the entire configuration for secrets
-before upload, including arguments and any additional fields. These checks are not
-a general-purpose secret scanner.
+Only `mcpServers` is accepted at the top level, with `command`, `args`, `cwd`,
+`env` and optional `type: "stdio"` per server. Unknown fields are rejected.
+Commands and arguments use a deliberately small portable grammar: names and
+relative paths containing ASCII letters, digits, underscores, dots, hyphens and
+slashes; paths cannot contain empty, dot or parent components. `${PLUGIN_ROOT}`
+may prefix a path. Options use `--name`, `-n`, or `--name=value`; glued path flags,
+URI/colon syntax, other variables, absolute and home-relative paths are rejected.
+Credential-named options must use environment references instead. This is not a
+general-purpose secret scanner: review all names and arguments for secrets before
+upload. Arbitrary shell expressions and launcher-specific syntax are unsupported.
 The flag records the operator's choice; it cannot verify OpenAI allowlisting.
 It does not add a server or bundle the separately installed CLI. Confirm that
 external CLI dependency is accepted for your submission before uploading.

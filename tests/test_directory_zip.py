@@ -24,7 +24,7 @@ class DirectoryZipTests(unittest.TestCase):
         self.repo = Path(self.temp.name) / "repo"
         self.source = self.repo / "plugins/altimate-code"
         shutil.copytree(REPO / "plugins/altimate-code", self.source)
-        for name in ("LICENSE", "PRIVACY.md", "TERMS.md", "SECURITY.md", "DIRECTORY.md"):
+        for name in ("LICENSE", "PRIVACY.md", "TERMS.md", "SECURITY.md", "DIRECTORY.md", "DIRECTORY-README.md"):
             shutil.copyfile(REPO / name, self.repo / name)
         self.out = Path(self.temp.name) / "dist"
 
@@ -63,7 +63,7 @@ class DirectoryZipTests(unittest.TestCase):
             self.assertIn(manifest["extensions"]["com.openai"]["onboardingSkill"][2:], names)
             for name in ("LICENSE", "PRIVACY.md", "TERMS.md", "SECURITY.md"):
                 self.assertEqual(archive.read(name), (REPO / name).read_bytes())
-            self.assertEqual(archive.read("README.md"), (REPO / "DIRECTORY.md").read_bytes())
+            self.assertEqual(archive.read("README.md"), (REPO / "DIRECTORY-README.md").read_bytes())
         self.assertTrue(all((REPO / p).read_bytes() == data for p, data in before.items()))
         self.assertTrue((REPO / "plugins/altimate-code/hooks/hooks.json").exists())
 
@@ -71,26 +71,38 @@ class DirectoryZipTests(unittest.TestCase):
         target = builder.build(self.repo, self.out)
         first = target.read_bytes()
         self.assertEqual(builder.build(self.repo, self.out).read_bytes(), first)
+        with ZipFile(target) as archive:
+            self.assertEqual(archive.namelist(), sorted(archive.namelist()))
+            for info in archive.infolist():
+                self.assertEqual(info.date_time, (2020, 1, 1, 0, 0, 0))
+                self.assertEqual(info.external_attr, 0o100644 << 16)
+                self.assertEqual(info.create_system, 3)
 
     def test_listing_artwork_matches_official_source(self):
         # Hash of the unmodified content after the outer opening SVG tag in
         # altimate-frontend's altimate_logo.svg, revision documented in DIRECTORY.md.
         expected = "41237a050140116a0cde5beb481a572a0ef1cf70c9488ad1c620d13a0de26b12"
         for name in ("logo", "composer-icon"):
-            svg = (self.source / f"assets/{name}.svg").read_text()
-            self.assertEqual(hashlib.sha256(svg[svg.index(">") + 1:].encode()).hexdigest(), expected)
+            svg = (self.source / f"assets/{name}.svg").read_bytes()
+            self.assertEqual(hashlib.sha256(svg.split(b">", 1)[1]).hexdigest(), expected)
 
     def test_mcp_only_on_explicit_opt_in_and_separate_artifact(self):
         mcp = {"mcpServers": {"altimate-code": {"command": "altimate-code", "args": ["mcp", "serve", "--workspace-tools"]}}}
         (self.source / ".mcp.json").write_text(json.dumps(mcp))
         manifest = self.manifest()
-        manifest.update({"mcpServers": "./.mcp.json", "apps": "./.app.json", "hooks": "./hooks/hooks.json"})
-        manifest["extensions"]["com.openai"].update({"mcpServers": "./.mcp.json", "apps": "./.app.json", "hooks": "./hooks/hooks.json"})
+        manifest.update({"mcpServers": "./.mcp.json", "apps": "./.app.json", "commands": "./commands/", "hooks": "./hooks/hooks.json"})
+        manifest["extensions"]["com.openai"].update({"mcpServers": "./.mcp.json", "apps": "./.app.json", "commands": "./commands/", "hooks": "./hooks/hooks.json"})
         self.save_manifest(manifest)
         (self.source / ".app.json").write_text('{"apps": {}}')
         ordinary = builder.build(self.repo, self.out)
         local = builder.build(self.repo, self.out, True)
         self.assertNotEqual(ordinary, local)
+        for target in (ordinary, local):
+            with ZipFile(target) as archive:
+                packaged = json.loads(archive.read(builder.MANIFEST))
+                for holder in (packaged, packaged["extensions"]["com.openai"]):
+                    self.assertFalse(set(holder) & {"hooks", "commands", "apps"})
+                self.assertNotIn("mcpServers", packaged["extensions"]["com.openai"])
         with ZipFile(ordinary) as archive:
             self.assertNotIn(".mcp.json", archive.namelist())
             self.assertNotIn("mcpServers", json.loads(archive.read(builder.MANIFEST)))
@@ -153,6 +165,39 @@ class DirectoryZipTests(unittest.TestCase):
                 with self.assertRaises(ValueError):
                     builder.build(self.repo, self.out, True)
                 self.assertFalse(self.out.exists())
+
+    def test_reviewed_mcp_bypasses_rejected(self):
+        values = ["server/../../../../Users/me/x.js", "--config=cfg/../../etc/secret",
+                  "-c/Users/me/cfg.json", "-javaagent:/Users/me/a.jar",
+                  "file:///Users/me/srv.js", "$HOME/srv/index.js", "${HOME}/srv/index.js",
+                  "--token=sk-live-synthetic", "--token", "${PLUGIN_ROOT}/../secret",
+                  "--config=${PLUGIN_ROOT}/cfg/../../secret"]
+        for value in values:
+            with self.subTest(value=value):
+                config = {"mcpServers": {"example": {"command": "example", "args": [value]}}}
+                (self.source / ".mcp.json").write_text(json.dumps(config))
+                with self.assertRaises(ValueError):
+                    builder.build(self.repo, self.out, True)
+                self.assertFalse(self.out.exists())
+
+    def test_mcp_schema_and_portable_references(self):
+        for field, value in (("type", "http"), ("headers", {"Authorization": "secret"}),
+                             ("env_vars", {"TOKEN": "secret"}), ("unknown", "secret")):
+            with self.subTest(field=field):
+                config = {"mcpServers": {"example": {"command": "example", field: value}}}
+                (self.source / ".mcp.json").write_text(json.dumps(config))
+                with self.assertRaises(ValueError):
+                    builder.build(self.repo, self.out, True)
+        config = {"mcpServers": {"example": {"type": "stdio", "command": "node",
+                  "args": ["${PLUGIN_ROOT}/server/index.js", "--config=${PLUGIN_ROOT}/config.json"],
+                  "cwd": "${PLUGIN_ROOT}", "env": {"TOKEN": "${TOKEN}"}}}}
+        (self.source / ".mcp.json").write_text(json.dumps(config))
+        with ZipFile(builder.build(self.repo, self.out, True)) as archive:
+            self.assertEqual(json.loads(archive.read(".mcp.json")), config)
+        config["extra"] = {"secret": "literal"}
+        (self.source / ".mcp.json").write_text(json.dumps(config))
+        with self.assertRaises(ValueError):
+            builder.build(self.repo, self.out, True)
 
     def test_malformed_metadata_cli_errors_are_friendly(self):
         script = self.repo / "scripts/build_directory_zip.py"
