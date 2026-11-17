@@ -44,6 +44,13 @@ external CLI dependency is accepted for your submission before uploading.
 
 ## Before submitting
 
+The listing images use the existing Altimate gradient mark from
+`AltimateAI/altimate-frontend`, `apps/web/src/assets/images/altimate_logo.svg`,
+revision `854b86ad83d8d1a6cab576aab1dad1abfc573f78`.
+The source SHA-256 is `d643aeef2a7ff3442901391f32b3f6bef280e9e8c7bcc164727030a0e93f6d1b`.
+Only the outer SVG dimensions and viewBox differ: transparent square padding
+centers the original artwork without changing its paths, gradients or colors.
+
 - Complete organization/publisher identity verification and confirm submission
   access. A successful build is not directory approval.
 - Test a clean desktop install, setup and the actual skills using the built ZIP.

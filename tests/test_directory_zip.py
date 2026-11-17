@@ -1,6 +1,7 @@
 """Exercise upload artifacts, not just the manifest transformation."""
 
 import importlib.util
+import hashlib
 import json
 from pathlib import Path
 import shutil
@@ -69,6 +70,14 @@ class DirectoryZipTests(unittest.TestCase):
         target = builder.build(self.repo, self.out)
         first = target.read_bytes()
         self.assertEqual(builder.build(self.repo, self.out).read_bytes(), first)
+
+    def test_listing_artwork_matches_official_source(self):
+        # Hash of the unmodified content after the outer opening SVG tag in
+        # altimate-frontend's altimate_logo.svg, revision documented in DIRECTORY.md.
+        expected = "41237a050140116a0cde5beb481a572a0ef1cf70c9488ad1c620d13a0de26b12"
+        for name in ("logo", "composer-icon"):
+            svg = (self.source / f"assets/{name}.svg").read_text()
+            self.assertEqual(hashlib.sha256(svg[svg.index(">") + 1:].encode()).hexdigest(), expected)
 
     def test_mcp_only_on_explicit_opt_in_and_separate_artifact(self):
         mcp = {"mcpServers": {"altimate-code": {"command": "altimate-code", "args": ["mcp", "serve", "--workspace-tools"]}}}
