@@ -18,15 +18,46 @@ def read_file(path):
     return path.read_bytes()
 
 
+def require_object(value, label):
+    if not isinstance(value, dict):
+        raise ValueError(f"{label} must be a JSON object")
+    return value
+
+
+def validate_local_mcp(mcp):
+    servers = require_object(mcp, "MCP configuration").get("mcpServers")
+    if not isinstance(servers, dict) or not servers:
+        raise ValueError("Local MCP mode requires at least one server")
+    for server in servers.values():
+        require_object(server, "MCP server")
+        command = server.get("command")
+        if not isinstance(command, str) or not command.strip() or "url" in server:
+            raise ValueError("Local MCP mode accepts stdio servers only")
+        args = server.get("args", [])
+        if not isinstance(args, list) or any(not isinstance(arg, str) for arg in args):
+            raise ValueError("MCP args must be an array of strings")
+        cwd = server.get("cwd", "")
+        if not isinstance(cwd, str):
+            raise ValueError("MCP cwd must be a string")
+        for value in (command, cwd, *args):
+            path = value.split("=", 1)[-1] if value.startswith("-") else value
+            if path.startswith(("/", "\\", "~")) or re.match(r"^[A-Za-z]:", path):
+                raise ValueError("MCP command, args and cwd must not contain machine-local paths")
+        env = require_object(server.get("env", {}), "MCP env")
+        if any(not isinstance(value, str) or not re.fullmatch(r"\$\{[A-Za-z_][A-Za-z0-9_]*\}", value)
+               for value in env.values()):
+            raise ValueError("MCP env values must be ${VARIABLE} references, not literal values")
+
+
 def build(repo, output, include_local_mcp=False):
     source = repo / "plugins/altimate-code"
-    manifest = json.loads(read_file(source / MANIFEST))
+    manifest = require_object(json.loads(read_file(source / MANIFEST)), "Manifest")
     version = manifest["version"]
-    if not re.fullmatch(r"\d+\.\d+\.\d+(?:-[a-zA-Z0-9.-]+)?", version):
+    if not isinstance(version, str) or not re.fullmatch(r"\d+\.\d+\.\d+(?:-[a-zA-Z0-9.-]+)?", version):
         raise ValueError("Manifest version must be a semantic version")
     if (source / "plugin.json").exists():
         raise ValueError("Keep the source in the legacy .codex-plugin format")
-    interface = manifest["interface"]
+    interface = require_object(manifest["interface"], "Manifest interface")
     for field in ("displayName", "shortDescription"):
         if not isinstance(interface.get(field), str) or not 1 <= len(interface[field]) <= 30:
             raise ValueError(f"interface.{field} must contain 1–30 characters")
@@ -36,7 +67,7 @@ def build(repo, output, include_local_mcp=False):
     if any(not isinstance(p, str) or not 1 <= len(p) <= 128 or "@" in p for p in prompts) or len(set(prompts)) != len(prompts):
         raise ValueError("Default prompts must be unique strings of 1–128 characters without @mentions")
     for field in ("websiteURL", "supportURL", "privacyPolicyURL", "termsOfServiceURL"):
-        if not interface.get(field, "").startswith("https://"):
+        if not isinstance(interface.get(field), str) or not interface[field].startswith("https://"):
             raise ValueError(f"interface.{field} must be an HTTPS URL")
 
     # Only portable skills and images belong in the directory artifact. No blanket
@@ -79,7 +110,8 @@ def build(repo, output, include_local_mcp=False):
             raise ValueError("Listing SVGs require numeric width and height") from error
         if icon.tag != "{http://www.w3.org/2000/svg}svg" or width != height or not width >= 48:
             raise ValueError("Listing icons must be square SVGs at least 48px wide")
-    extension = manifest.setdefault("extensions", {}).setdefault("com.openai", {})
+    extensions = require_object(manifest.setdefault("extensions", {}), "Manifest extensions")
+    extension = require_object(extensions.setdefault("com.openai", {}), "OpenAI extension")
     require_packaged(extension.get("onboardingSkill"))
     for holder in (manifest, extension):
         for key in ("hooks", "commands", "apps", "mcpServers"):
@@ -88,12 +120,7 @@ def build(repo, output, include_local_mcp=False):
     manifest["skills"] = "./skills/"
     if include_local_mcp:
         mcp = json.loads(read_file(source / ".mcp.json"))
-        servers = mcp.get("mcpServers")
-        if not isinstance(servers, dict) or not servers:
-            raise ValueError("Local MCP mode requires at least one server")
-        for server in servers.values():
-            if not isinstance(server, dict) or not server.get("command") or "url" in server:
-                raise ValueError("Local MCP mode accepts stdio servers only")
+        validate_local_mcp(mcp)
         files[".mcp.json"] = (json.dumps(mcp, indent=2) + "\n").encode()
         manifest["mcpServers"] = "./.mcp.json"
     files[MANIFEST] = (json.dumps(manifest, indent=2) + "\n").encode()

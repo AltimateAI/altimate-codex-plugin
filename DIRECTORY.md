@@ -31,13 +31,19 @@ The builder includes only Markdown skills, image assets (with validated square
 SVG listing icons), the legacy manifest,
 this README and legal/security documents. It removes hooks, legacy commands,
 app references and MCP registration, and sets `requires_local_executor: true`.
-It rejects broken resource references and unsupported files rather than silently
-shipping a partial skill. New skills that require scripts need a deliberate
+It rejects missing manifest-referenced icons and onboarding files, and unsupported
+file types. It does not parse links or resource references inside skill Markdown;
+check those manually during installation testing. New skills that require scripts need a deliberate
 packaging change and tests before they can be included.
 
 Only after OpenAI confirms local MCP eligibility for the submitting organization,
 use `python3 scripts/build_directory_zip.py --include-local-mcp`. This requires a
 source `.mcp.json` with stdio servers and creates a distinct `-local-mcp.zip`.
+MCP `env` values must be `${VARIABLE}` references; literal values are rejected.
+Machine-local paths in `command`, `args` (including `--option=path`) and `cwd`
+are rejected. Use portable commands and review the entire configuration for secrets
+before upload, including arguments and any additional fields. These checks are not
+a general-purpose secret scanner.
 The flag records the operator's choice; it cannot verify OpenAI allowlisting.
 It does not add a server or bundle the separately installed CLI. Confirm that
 external CLI dependency is accepted for your submission before uploading.

@@ -30,7 +30,7 @@
   "interface": {
     "displayName": "Altimate Code",
     "shortDescription": "dbt and warehouse workflows",
-    "longDescription": "Routes data-engineering tasks — column-level lineage, cross-database validation, warehouse profiling, FinOps reporting, PII detection, dbt builds against real warehouses — to altimate-code, which already ships the specialised sub-skills internally. Ships two skills: `altimate-code` for delegation and `review` for dbt/SQL PR review with signed verdict envelopes. Use this plugin when you want Codex to hand a task to altimate-code rather than reimplement the workflow with native tools.",
+    "longDescription": "Routes data-engineering tasks — column-level lineage, cross-database validation, warehouse profiling, FinOps reporting, PII detection, dbt builds against real warehouses — to altimate-code, which already ships the specialised sub-skills internally. Ships two task skills plus a `get-started` setup skill: `altimate-code` for delegation and `review` for dbt/SQL PR review with signed verdict envelopes. Use this plugin when you want Codex to hand a task to altimate-code rather than reimplement the workflow with native tools.",
     "developerName": "Altimate AI",
     "category": "Developer Tools",
     "capabilities": [

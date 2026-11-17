@@ -63,6 +63,7 @@ class DirectoryZipTests(unittest.TestCase):
             self.assertIn(manifest["extensions"]["com.openai"]["onboardingSkill"][2:], names)
             for name in ("LICENSE", "PRIVACY.md", "TERMS.md", "SECURITY.md"):
                 self.assertEqual(archive.read(name), (REPO / name).read_bytes())
+            self.assertEqual(archive.read("README.md"), (REPO / "DIRECTORY.md").read_bytes())
         self.assertTrue(all((REPO / p).read_bytes() == data for p, data in before.items()))
         self.assertTrue((REPO / "plugins/altimate-code/hooks/hooks.json").exists())
 
@@ -123,6 +124,52 @@ class DirectoryZipTests(unittest.TestCase):
         (self.source / "skills/get-started/SKILL.md").unlink()
         with self.assertRaises(ValueError):
             builder.build(self.repo, self.out)
+
+    def test_mcp_rejects_literal_environment_values_without_exposing_them(self):
+        for env in ({"TOKEN": "synthetic-secret"}, {"TOKEN": "prefix-${TOKEN}"},
+                    {"TOKEN": 7}, {"TOKEN": None}, [], None):
+            with self.subTest(env=env):
+                config = {"mcpServers": {"example": {"command": "example", "env": env}}}
+                (self.source / ".mcp.json").write_text(json.dumps(config))
+                with self.assertRaises(ValueError) as error:
+                    builder.build(self.repo, self.out, True)
+                self.assertNotIn("synthetic-secret", str(error.exception))
+                self.assertFalse(self.out.exists())
+        config["mcpServers"]["example"]["env"] = {"TOKEN": "${TOKEN}"}
+        (self.source / ".mcp.json").write_text(json.dumps(config))
+        with ZipFile(builder.build(self.repo, self.out, True)) as archive:
+            self.assertEqual(json.loads(archive.read(".mcp.json")), config)
+
+    def test_mcp_rejects_machine_local_paths(self):
+        for field, value in (("command", "/Users/example/bin/mcp"),
+                             ("args", ["--config=/Users/example/config.json"]),
+                             ("args", [r"C:\Users\example\config.json"]),
+                             ("cwd", "~/workspace")):
+            with self.subTest(field=field, value=value):
+                server = {"command": "example", field: value}
+                (self.source / ".mcp.json").write_text(json.dumps({"mcpServers": {"example": server}}))
+                with self.assertRaises(ValueError):
+                    builder.build(self.repo, self.out, True)
+                self.assertFalse(self.out.exists())
+
+    def test_malformed_metadata_cli_errors_are_friendly(self):
+        script = self.repo / "scripts/build_directory_zip.py"
+        script.parent.mkdir()
+        shutil.copyfile(REPO / "scripts/build_directory_zip.py", script)
+        original = self.manifest()
+        malformed = [[], {**original, "version": 123}, {**original, "interface": []},
+                     {**original, "interface": {**original["interface"], "websiteURL": None}},
+                     {**original, "extensions": []},
+                     {**original, "extensions": {"com.openai": None}}]
+        for manifest in malformed:
+            with self.subTest(manifest=manifest):
+                self.save_manifest(manifest)
+                result = subprocess.run(["python3", str(script), "--output-dir", str(self.out)],
+                                        capture_output=True, text=True)
+                self.assertEqual(result.returncode, 1)
+                self.assertIn("Directory build failed:", result.stderr)
+                self.assertNotIn("Traceback", result.stderr)
+                self.assertFalse(self.out.exists())
 
     def test_non_square_icon_rejected(self):
         (self.source / "assets/logo.svg").write_text('<svg xmlns="http://www.w3.org/2000/svg" width="256" height="128"/>')
