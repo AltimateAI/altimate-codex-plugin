@@ -41,7 +41,8 @@ def validate_local_mcp(mcp):
             raise ValueError("MCP cwd must be a string")
         for value in (command, cwd, *args):
             path = value.split("=", 1)[-1] if value.startswith("-") else value
-            if path.startswith(("/", "\\", "~")) or re.match(r"^[A-Za-z]:", path):
+            if (path in (".", "..") or path.startswith(("/", "\\", "~", "./", "../", ".\\", "..\\"))
+                    or re.match(r"^[A-Za-z]:", path)):
                 raise ValueError("MCP command, args and cwd must not contain machine-local paths")
         env = require_object(server.get("env", {}), "MCP env")
         if any(not isinstance(value, str) or not re.fullmatch(r"\$\{[A-Za-z_][A-Za-z0-9_]*\}", value)

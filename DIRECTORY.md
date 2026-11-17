@@ -40,8 +40,8 @@ Only after OpenAI confirms local MCP eligibility for the submitting organization
 use `python3 scripts/build_directory_zip.py --include-local-mcp`. This requires a
 source `.mcp.json` with stdio servers and creates a distinct `-local-mcp.zip`.
 MCP `env` values must be `${VARIABLE}` references; literal values are rejected.
-Machine-local paths in `command`, `args` (including `--option=path`) and `cwd`
-are rejected. Use portable commands and review the entire configuration for secrets
+Absolute, home-relative and dot-relative paths in `command`, `args` (including
+`--option=path`) and `cwd` are rejected. Use portable commands and review the entire configuration for secrets
 before upload, including arguments and any additional fields. These checks are not
 a general-purpose secret scanner.
 The flag records the operator's choice; it cannot verify OpenAI allowlisting.

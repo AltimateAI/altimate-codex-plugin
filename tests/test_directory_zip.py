@@ -144,7 +144,9 @@ class DirectoryZipTests(unittest.TestCase):
         for field, value in (("command", "/Users/example/bin/mcp"),
                              ("args", ["--config=/Users/example/config.json"]),
                              ("args", [r"C:\Users\example\config.json"]),
-                             ("cwd", "~/workspace")):
+                             ("cwd", "~/workspace"), ("command", "./local-server"),
+                             ("args", ["--config=../private/config.json"]),
+                             ("cwd", "../workspace"), ("cwd", r"..\workspace")):
             with self.subTest(field=field, value=value):
                 server = {"command": "example", field: value}
                 (self.source / ".mcp.json").write_text(json.dumps({"mcpServers": {"example": server}}))
