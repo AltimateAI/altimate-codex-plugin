@@ -4,6 +4,14 @@ All notable changes to the Altimate Code Codex plugin are recorded here.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.4.0] — 2026-11-17
+
+- Add guided setup with an optional, explicitly chosen manual hooks installation.
+- Add square listing images, support link, and directory-compatible listing text.
+- Provide a reproducible directory ZIP build that excludes hooks and commands;
+  local MCP is excluded unless explicitly selected for an approved submission.
+- Preserve the full GitHub plugin's legacy manifest and lifecycle hooks.
+
 ## [1.3.0] — 2026-11-12
 
 ### Added

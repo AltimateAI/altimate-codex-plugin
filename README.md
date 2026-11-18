@@ -4,7 +4,7 @@ Codex plugin that delegates dbt and warehouse work to [`altimate-code`](https://
 
 ## What this gives your Codex agent
 
-Two skills and matching slash commands. **`altimate-code`** routes tasks that touch live warehouse state, column lineage, cross-database work, query-cost attribution, schema diffs, PII detection, or FinOps reporting to the altimate-code subprocess. The skill body encodes:
+Two task skills and matching slash commands, plus a `get-started` setup skill. **`altimate-code`** routes tasks that touch live warehouse state, column lineage, cross-database work, query-cost attribution, schema diffs, PII detection, or FinOps reporting to the altimate-code subprocess. The skill body encodes:
 
 - how to resolve the CLI (`altimate-code`, falling back to `altimate`) and detect that it is not installed
 - which agent persona (`fast-edit` / `analyst` / `builder`) to pick for the task shape
@@ -87,3 +87,10 @@ After install, run `altimate` once to configure your LLM provider auth and wareh
 - **Terms of use:** [TERMS.md](./TERMS.md) — governs your use of the plugin and the connected Altimate services.
 - **Security disclosure:** [SECURITY.md](./SECURITY.md) — how to report a vulnerability.
 - **Contributing:** [CONTRIBUTING.md](./CONTRIBUTING.md) · [Code of Conduct](./CODE_OF_CONDUCT.md).
+
+## Public directory package
+
+The full GitHub installation retains lifecycle hooks. A separate build produces
+a hook-free desktop directory ZIP with the same skills and guided setup.
+See [DIRECTORY.md](DIRECTORY.md) for build commands, optional local MCP packaging,
+and submission prerequisites. Building the archive does not publish a listing.
